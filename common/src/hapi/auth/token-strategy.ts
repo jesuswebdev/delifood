@@ -9,12 +9,11 @@ interface AuthStrategyOptions {
 }
 
 const tokenAuthStrategy = {
-  name: 'authScheme',
+  name: 'tokenAuthScheme',
   register: async function (server: Server, options: AuthStrategyOptions) {
     const requestScheme = () => {
       return {
         authenticate: async (request: Request, h: ResponseToolkit) => {
-
           let token: string | null = null;
           let payload = null;
           const auth = request.raw.req.headers.authorization;
@@ -41,9 +40,9 @@ const tokenAuthStrategy = {
       };
     };
 
-    server.auth.scheme('requestScheme', requestScheme);
-    server.auth.strategy('requestAuth', 'requestScheme');
-    server.auth.default({ strategy: 'requestAuth' });
+    server.auth.scheme('tokenAuthScheme', requestScheme);
+    server.auth.strategy('tokenAuth', 'tokenAuthScheme');
+    server.auth.default({ strategy: 'tokenAuth' });
   }
 };
 
