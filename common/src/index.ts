@@ -11,3 +11,4 @@ export const castToObjectId = function castToObjectId(
 
 export * from './interfaces/index';
 export * from './schemas/index';
+export * from './hapi/index';
