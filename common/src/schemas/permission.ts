@@ -8,7 +8,7 @@ const createPermissionSchema = function createPermissionSchema(
     {
       name: { type: String, required: true },
       description: { type: String },
-      value: { type: String, required: true }
+      value: { type: String, required: true, unique: true }
     },
     { ...options }
   );
