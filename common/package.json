@@ -15,11 +15,14 @@
   "author": "jesuswebdev",
   "license": "ISC",
   "devDependencies": {
+    "@types/hapi__hapi": "^20.0.9",
     "@typescript-eslint/eslint-plugin": "^5.5.0",
     "@typescript-eslint/parser": "^5.5.0",
     "eslint": "^8.3.0"
   },
   "dependencies": {
+    "@hapi/boom": "^9.1.4",
+    "@hapi/iron": "^6.0.0",
     "mongoose": "^6.0.14"
   }
 }
