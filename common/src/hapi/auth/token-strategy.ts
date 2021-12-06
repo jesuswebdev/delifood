@@ -3,6 +3,7 @@
 import { Server, Request, ResponseToolkit } from '@hapi/hapi';
 import Boom from '@hapi/boom';
 import Iron from '@hapi/iron';
+import { AUTH_STRATEGY } from '../../index';
 
 interface AuthStrategyOptions {
   ironSecret: string;
@@ -41,8 +42,8 @@ const tokenAuthStrategy = {
     };
 
     server.auth.scheme('tokenAuthScheme', requestScheme);
-    server.auth.strategy('tokenAuth', 'tokenAuthScheme');
-    server.auth.default({ strategy: 'tokenAuth' });
+    server.auth.strategy(AUTH_STRATEGY.TOKEN_AUTH, 'tokenAuthScheme');
+    server.auth.default({ strategy: AUTH_STRATEGY.TOKEN_AUTH });
   }
 };
 
