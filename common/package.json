@@ -1,6 +1,6 @@
 {
   "name": "@delifood/common",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -9,8 +9,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "version:patch": "git add ./package*.json",
-    "pub": "npm run build && npm publish"
+    "pub": "npm run build && npm version patch -m 'bump version to %s' && npm publish"
   },
   "keywords": [],
   "author": "jesuswebdev",
