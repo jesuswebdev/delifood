@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "pub": "npm run build && npm version patch -m 'bump version to %s' && npm publish"
+    "pub": "npm run build && npm publish"
   },
   "keywords": [],
   "author": "jesuswebdev",
