@@ -6,7 +6,7 @@ const createRoleSchema = function createRoleSchema(
 ) {
   return new Schema<RoleAttributes>(
     {
-      name: { type: String, required: true },
+      name: { type: String, required: true, unique: true },
       description: { type: String },
       permissions: { type: [Schema.Types.ObjectId], ref: 'Permission' }
     },
