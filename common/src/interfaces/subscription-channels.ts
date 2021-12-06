@@ -1,0 +1,3 @@
+export enum SUBSCRIPTION_CHANNELS {
+  USER_CREATED
+}

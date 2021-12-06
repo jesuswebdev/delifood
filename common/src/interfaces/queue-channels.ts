@@ -1,0 +1,3 @@
+export enum QUEUE_CHANNELS {
+  USER_CREATED
+}
