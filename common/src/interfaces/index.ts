@@ -1,4 +1,5 @@
 export * from './permission';
+export * from './role';
 
 export * from './auth-strategy';
 export * from './queue-channels';
