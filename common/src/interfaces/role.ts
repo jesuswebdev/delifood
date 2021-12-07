@@ -5,7 +5,7 @@ import {
   Types,
   SchemaDefinitionProperty
 } from 'mongoose';
-import { LeanPermissionDocument } from './permission';
+import { LeanPermissionDocument } from './index';
 
 export interface RoleAttributes {
   name: string;
