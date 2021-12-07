@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { PluginProperties } from '@hapi/hapi';
+import { ConsumeMessage } from 'amqplib';
 
 declare module '@hapi/hapi' {
   export interface PluginProperties {
@@ -26,6 +27,17 @@ export const getModel = function getModel<T>(
   model: string
 ): T {
   return plugins.mongoose.connection.model(model);
+};
+
+export const encodeRabbitMqMessage = function encodeRabbitMqMessage<T>(
+  data: T
+): Buffer {
+  return Buffer.from(JSON.stringify(data));
+};
+export const decodeRabbitMqMessage = function decodeRabbitMqMessage<T>(
+  msg: ConsumeMessage
+): T {
+  return JSON.parse(msg.content.toString());
 };
 
 export * from './interfaces/index';
