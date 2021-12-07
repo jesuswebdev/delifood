@@ -9,7 +9,7 @@ import { LeanRoleDocument } from './index';
 
 export interface UserAttributes {
   email: string;
-  password: string;
+  password?: string;
   enabled: boolean;
   roles: SchemaDefinitionProperty<Types.ObjectId>[] | LeanRoleDocument[];
 }
