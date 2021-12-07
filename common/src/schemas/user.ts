@@ -7,7 +7,7 @@ const createUserSchema = function createUserSchema(
   return new Schema<UserAttributes>(
     {
       email: { type: String, required: true, unique: true },
-      password: { type: String, required: true },
+      password: { type: String, required: true, select: false },
       enabled: { type: Boolean, default: false },
       roles: { type: [Schema.Types.ObjectId], ref: 'Role' }
     },
