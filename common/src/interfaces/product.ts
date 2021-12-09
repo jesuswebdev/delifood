@@ -17,11 +17,11 @@ export interface ProductAttributes {
   rating?: number;
   orders?: number;
   discount?: number;
-  categories:
+  categories?:
     | SchemaDefinitionProperty<Types.ObjectId>[]
     | LeanCategoryDocument[]
     | string[];
-  tags:
+  tags?:
     | SchemaDefinitionProperty<Types.ObjectId>[]
     | LeanTagDocument[]
     | string[];
