@@ -13,10 +13,10 @@ export interface ProductAttributes {
   sku: string;
   price: number;
   enabled: boolean;
-  images: string[];
-  rating: number;
-  orders: number;
-  discount: number;
+  images?: string[];
+  rating?: number;
+  orders?: number;
+  discount?: number;
   categories:
     | SchemaDefinitionProperty<Types.ObjectId>[]
     | LeanCategoryDocument[];

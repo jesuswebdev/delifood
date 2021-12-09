@@ -29,6 +29,19 @@ export const getModel = function getModel<T>(
   return plugins.mongoose.connection.model(model);
 };
 
+export const assertNonDuplicateIds = function assertNonDuplicateIds(
+  ids: string[]
+): boolean {
+  const aux: { [key: string]: number } = {};
+  for (const id of ids) {
+    if (aux[id]) {
+      return false;
+    }
+    aux[id] = 1;
+  }
+  return true;
+};
+
 export const encodeRabbitMqMessage = function encodeRabbitMqMessage<T>(
   data: T
 ): Buffer {

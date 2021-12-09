@@ -8,12 +8,12 @@ const createProductSchema = function createProductSchema(
     {
       name: { type: String, required: true },
       description: { type: String },
-      discount: { type: Number },
-      enabled: { type: Boolean },
+      discount: { type: Number, default: 0 },
+      enabled: { type: Boolean, default: false },
       price: { type: Number },
       images: { type: [String] },
       rating: { type: Number },
-      orders: { type: Number },
+      orders: { type: Number, default: 0 },
       sku: { type: String },
       tags: { type: [Schema.Types.ObjectId], ref: 'Tag' },
       categories: { type: [Schema.Types.ObjectId], ref: 'Category' }
