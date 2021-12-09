@@ -9,7 +9,7 @@ const cartItemSubSchema = new Schema<CartItemAttributes>(
   { _id: false, versionKey: false }
 );
 
-const createCategorySchema = function createCategorySchema(
+const createCartSchema = function createCartSchema(
   options: SchemaOptions = {}
 ) {
   return new Schema<CartAttributes>(
@@ -21,4 +21,4 @@ const createCategorySchema = function createCategorySchema(
   );
 };
 
-export { createCategorySchema };
+export { createCartSchema };
