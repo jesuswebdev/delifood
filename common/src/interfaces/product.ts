@@ -19,8 +19,12 @@ export interface ProductAttributes {
   discount?: number;
   categories:
     | SchemaDefinitionProperty<Types.ObjectId>[]
-    | LeanCategoryDocument[];
-  tags: SchemaDefinitionProperty<Types.ObjectId>[] | LeanTagDocument[];
+    | LeanCategoryDocument[]
+    | string[];
+  tags:
+    | SchemaDefinitionProperty<Types.ObjectId>[]
+    | LeanTagDocument[]
+    | string[];
 }
 
 export interface ProductDocument extends Document, ProductAttributes {}
