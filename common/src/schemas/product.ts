@@ -14,7 +14,7 @@ const createProductSchema = function createProductSchema(
       images: { type: [String] },
       rating: { type: Number },
       orders: { type: Number, default: 0 },
-      sku: { type: String },
+      sku: { type: String, unique: true },
       tags: { type: [Schema.Types.ObjectId], ref: 'Tag' },
       categories: { type: [Schema.Types.ObjectId], ref: 'Category' }
     },
