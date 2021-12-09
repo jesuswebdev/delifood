@@ -12,7 +12,7 @@ export interface ProductAttributes {
   description?: string;
   sku: string;
   price: number;
-  enabled: boolean;
+  enabled?: boolean;
   images?: string[];
   rating?: number;
   orders?: number;
