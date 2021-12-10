@@ -2,11 +2,11 @@ import Hapi, { Server } from '@hapi/hapi';
 import {
   tokenAuthStrategy,
   MongoosePlugin,
-  RabbitMQPlugin,
   UserCredentials as HapiUserCredentials
 } from '@delifood/common';
-import { PORT, MONGODB_URI, IRON_SECRET } from './config/index';
+import { PORT, MONGODB_URI, IRON_SECRET, NATS_URI } from './config/index';
 import { mongoosePlugin } from './plugins/mongoose';
+import { natsPlugin } from './plugins/nats';
 import cartRoutes from './entity/cart/routes';
 
 declare module '@hapi/hapi' {
@@ -14,7 +14,6 @@ declare module '@hapi/hapi' {
     // eslint-disable-next-line
     [key: string]: any;
     mongoose: MongoosePlugin;
-    rabbitmq: RabbitMQPlugin;
   }
   // eslint-disable-next-line
   export interface UserCredentials extends HapiUserCredentials {}
@@ -34,10 +33,7 @@ export const init = async function init(config?: InitServerConfig) {
       plugin: mongoosePlugin,
       options: { uri: config?.mongodbUri ?? MONGODB_URI }
     },
-    // {
-    //   plugin: rabbitMqPlugin,
-    //   options: { uri: RABBITMQ_URI }
-    // },
+    { plugin: natsPlugin, options: { uri: NATS_URI } },
     { plugin: tokenAuthStrategy, options: { ironSecret: IRON_SECRET } },
     { plugin: cartRoutes, routes: { prefix: '/cart' } }
   ]);
