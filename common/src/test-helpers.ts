@@ -21,7 +21,7 @@ import {
 
 export const insertDummyPermission = async function insertDummyPermission(
   model: PermissionModel,
-  props?: PermissionAttributes
+  props?: Partial<PermissionAttributes>
 ): Promise<PermissionDocument> {
   const doc = await model.create({
     name: 'Dummy Permission',
@@ -34,7 +34,7 @@ export const insertDummyPermission = async function insertDummyPermission(
 
 export const insertDummyRole = async function insertDummyRole(
   model: RoleModel,
-  props?: RoleAttributes
+  props?: Partial<RoleAttributes>
 ): Promise<RoleDocument> {
   const doc = await model.create({
     name: 'Dummy role',
@@ -46,7 +46,7 @@ export const insertDummyRole = async function insertDummyRole(
 
 export const insertDummyUser = async function insertDummyUser(
   model: UserModel,
-  props?: UserAttributes
+  props?: Partial<UserAttributes>
 ): Promise<UserDocument> {
   const doc = await model.create({
     email: 'dummyuser@test.com',
@@ -58,7 +58,7 @@ export const insertDummyUser = async function insertDummyUser(
 
 export const insertDummyCategory = async function insertDummyCategory(
   model: CategoryModel,
-  props?: CategoryAttributes
+  props?: Partial<CategoryAttributes>
 ): Promise<CategoryDocument> {
   const doc = await model.create({
     name: 'Dummy Category',
@@ -70,7 +70,7 @@ export const insertDummyCategory = async function insertDummyCategory(
 
 export const insertDummyTag = async function insertDummyTag(
   model: TagModel,
-  props?: TagAttributes
+  props?: Partial<TagAttributes>
 ): Promise<TagDocument> {
   const doc = await model.create({
     value: 'Dummy tag',
@@ -81,7 +81,7 @@ export const insertDummyTag = async function insertDummyTag(
 
 export const insertDummyProduct = async function insertDummyProduct(
   model: ProductModel,
-  props?: ProductAttributes
+  props?: Partial<ProductAttributes>
 ): Promise<ProductDocument> {
   const doc = await model.create({
     name: 'Dummy product',

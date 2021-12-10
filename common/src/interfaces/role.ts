@@ -4,7 +4,7 @@ import { LeanPermissionDocument } from './index';
 export interface RoleAttributes {
   name: string;
   description?: string;
-  permissions: Types.ObjectId[] | LeanPermissionDocument[];
+  permissions?: Types.ObjectId[] | LeanPermissionDocument[] | string[];
 }
 
 export interface RoleDocument extends Document, RoleAttributes {}
