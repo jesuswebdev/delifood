@@ -6,44 +6,28 @@ import {
   cloneObject,
   getModel,
   RoleModel,
-  RoleDocument,
   UserModel,
   UserAttributes,
   PermissionModel,
-  PermissionDocument
+  insertDummyRole,
+  insertDummyPermission,
+  insertDummyUser
 } from '@delifood/common';
 import { init } from '../src/server';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
-const insertDummyRole = async function insertDummyRole(
-  model: RoleModel,
-  text?: string
-): Promise<RoleDocument> {
-  const doc = await model.create({
-    name: text ?? 'Dummy role',
-    description: 'Dummy role description'
-  });
-  return doc;
-};
-
-async function insertDummyPermission(
-  model: PermissionModel,
-  text?: string
-): Promise<PermissionDocument> {
-  const p: PermissionDocument = await model.create({
-    name: `Dummy Permission${text ? ' ' + text : ''}`,
-    value: 'create:permission',
-    description: 'Dummy Permission description'
-  });
-  return p;
-}
-
 const cleanUp = async function cleanUp(server: Server) {
   const userModel = getModel<UserModel>(server.plugins, 'User');
   const roleModel = getModel<RoleModel>(server.plugins, 'Role');
-
-  await userModel.deleteMany();
-  await roleModel.deleteMany();
+  const permissionModel = getModel<PermissionModel>(
+    server.plugins,
+    'Permission'
+  );
+  await Promise.allSettled([
+    userModel.deleteMany(),
+    roleModel.deleteMany(),
+    permissionModel.deleteMany()
+  ]);
 };
 
 describe('Test User Routes', async () => {
@@ -65,8 +49,7 @@ describe('Test User Routes', async () => {
   });
 
   describe('Sign Up route', () => {
-    let request: ServerInjectOptions;
-    let roleModel: RoleModel;
+    let request: ServerInjectOptions & { payload: Partial<UserAttributes> };
 
     beforeEach(async () => {
       await cleanUp(server);
@@ -78,9 +61,8 @@ describe('Test User Routes', async () => {
           password: 'password1234'
         }
       };
-      roleModel = getModel<RoleModel>(server.plugins, 'Role');
-
-      await insertDummyRole(roleModel, 'User');
+      // sign up requires User role to exist
+      await insertDummyRole(getModel(server.plugins, 'Role'), { name: 'User' });
     });
 
     it('should create a user', async () => {
@@ -89,13 +71,13 @@ describe('Test User Routes', async () => {
     });
 
     it('should fail when the email is not valid', async () => {
-      (request.payload as UserAttributes).email = 'newmail';
+      request.payload.email = 'newmail';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when password is short', async () => {
-      (request.payload as UserAttributes).password = 'new';
+      request.payload.password = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
@@ -109,34 +91,26 @@ describe('Test User Routes', async () => {
   });
 
   describe('Sign In route', () => {
-    let request: ServerInjectOptions;
+    let request: ServerInjectOptions & { payload: Partial<UserAttributes> };
     const defaultPayloadObject = {
       email: 'test@test.com',
       password: 'password1234'
     };
 
     before(async () => {
-      const permissionModel = getModel<PermissionModel>(
-        server.plugins,
-        'Permission'
+      await cleanUp(server);
+
+      const dummyPermission = await insertDummyPermission(
+        getModel(server.plugins, 'Permission')
       );
-      const roleModel = getModel<RoleModel>(server.plugins, 'Role');
-      const userModel = getModel<UserModel>(server.plugins, 'User');
+      const dummyRole = await insertDummyRole(
+        getModel(server.plugins, 'Role'),
+        { permissions: [dummyPermission._id] }
+      );
 
-      await permissionModel.deleteMany();
-      await roleModel.deleteMany();
-      await userModel.deleteMany();
-
-      const dummyPermission = await insertDummyPermission(permissionModel);
-      const dummyRole = await insertDummyRole(roleModel);
-
-      dummyRole.permissions = [dummyPermission];
-      await dummyRole.save();
-
-      await userModel.create({
-        email: 'test@test.com',
-        password: 'password1234',
-        roles: [dummyRole]
+      await insertDummyUser(getModel(server.plugins, 'User'), {
+        ...defaultPayloadObject,
+        roles: [dummyRole._id]
       });
     });
 
@@ -154,38 +128,38 @@ describe('Test User Routes', async () => {
     });
 
     it('should fail when email is empty', async () => {
-      (request.payload as UserAttributes).email = '';
+      request.payload.email = '';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
     it('should fail when email is not valid', async () => {
-      (request.payload as UserAttributes).email = 'asdasdasd';
+      request.payload.email = 'asdasdasd';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
     it('should fail when email is short', async () => {
-      (request.payload as UserAttributes).email = 'a@b.c';
+      request.payload.email = 'a@b.c';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when password is empty', async () => {
-      (request.payload as UserAttributes).password = undefined;
+      request.payload.password = undefined;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
     it('should fail when password is short', async () => {
-      (request.payload as UserAttributes).password = 'asdf';
+      request.payload.password = 'asdf';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
     it('should fail when passing wrong email/password combination', async () => {
-      (request.payload as UserAttributes).password = 'testpassword';
+      request.payload.password = 'testpassword';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(422);
     });
     it('should fail when email does not exist', async () => {
-      (request.payload as UserAttributes).email = 'wrong@email.com';
+      request.payload.email = 'wrong@email.com';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });

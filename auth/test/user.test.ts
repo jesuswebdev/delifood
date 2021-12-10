@@ -7,42 +7,20 @@ import {
   AUTH_STRATEGY,
   getModel,
   RoleModel,
-  RoleDocument,
   UserModel,
   LeanUserDocument,
   UserAttributes,
-  UserDocument
+  UserDocument,
+  insertDummyRole,
+  insertDummyUser
 } from '@delifood/common';
 import { init } from '../src/server';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
-const insertDummyRole = async function insertDummyRole(
-  model: RoleModel,
-  text?: string
-): Promise<RoleDocument> {
-  const doc = await model.create({
-    name: `Dummy role${text ? ' ' + text : ''}`,
-    description: 'Dummy role description'
-  });
-  return doc;
-};
-
-const insertDummyUser = async function insertDummyUser(
-  model: UserModel
-): Promise<UserDocument> {
-  const doc = await model.create({
-    email: 'dummyuser@test.com',
-    password: 'password1234'
-  });
-  return doc;
-};
-
 const cleanUp = async function cleanUp(server: Server) {
   const userModel = getModel<UserModel>(server.plugins, 'User');
   const roleModel = getModel<RoleModel>(server.plugins, 'Role');
-
-  await userModel.deleteMany();
-  await roleModel.deleteMany();
+  await Promise.allSettled([userModel.deleteMany(), roleModel.deleteMany()]);
 };
 
 describe('Test User Routes', async () => {
@@ -64,13 +42,15 @@ describe('Test User Routes', async () => {
   });
 
   describe('Create User', () => {
-    let request: ServerInjectOptions;
+    let request: ServerInjectOptions & { payload: Partial<UserAttributes> };
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['create:user'] }
+      credentials: { user: { id: 'asd123' }, scope: ['create:user'] }
     };
 
-    beforeEach((done: Done) => {
+    beforeEach(async () => {
+      await cleanUp(server);
+
       request = {
         method: 'POST',
         url: '/users',
@@ -80,11 +60,6 @@ describe('Test User Routes', async () => {
         },
         auth: cloneObject(defaultAuthObject)
       };
-      const model = getModel<UserModel>(server.plugins, 'User');
-      model
-        .deleteMany()
-        .exec()
-        .then(() => done());
     });
 
     it('should create a user', async () => {
@@ -94,7 +69,7 @@ describe('Test User Routes', async () => {
 
       expect(response.statusCode).to.equal(201);
       expect(result._id).to.exist;
-      expect(result.email).to.equal((request.payload as UserAttributes).email);
+      expect(result.email).to.equal(request.payload.email);
     });
 
     it('should not return the password when creating a user', async () => {
@@ -121,13 +96,13 @@ describe('Test User Routes', async () => {
     });
 
     it('should fail when the email is not valid', async () => {
-      (request.payload as UserAttributes).email = 'newmail';
+      request.payload.email = 'newmail';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when password is short', async () => {
-      (request.payload as UserAttributes).password = 'new';
+      request.payload.password = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
@@ -145,23 +120,15 @@ describe('Test User Routes', async () => {
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['get:user'] }
+      credentials: { user: { id: 'asd123' }, scope: ['get:user'] }
     };
 
     before(async () => {
-      const roleModel = getModel<RoleModel>(server.plugins, 'Role');
-      const model = getModel<UserModel>(server.plugins, 'User');
-      await model.deleteMany();
-
-      const dummyRole = await insertDummyRole(roleModel);
-
-      user = await model.create({
-        email: 'user@test.com',
-        password: 'password1234'
+      await cleanUp(server);
+      const dummyRole = await insertDummyRole(getModel(server.plugins, 'Role'));
+      user = await insertDummyUser(getModel(server.plugins, 'User'), {
+        roles: [dummyRole._id]
       });
-
-      user.roles = [dummyRole];
-      await user.save();
     });
 
     after(async () => {
@@ -231,21 +198,15 @@ describe('Test User Routes', async () => {
   });
 
   describe('List Users', () => {
-    let userModel: UserModel;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['list:user'] }
+      credentials: { user: { id: 'asd123' }, scope: ['list:user'] }
     };
 
     before(async () => {
       await cleanUp(server);
-      userModel = getModel<UserModel>(server.plugins, 'User');
-
-      await userModel.create({
-        email: 'user@test.com',
-        password: 'password1234'
-      });
+      await insertDummyUser(getModel(server.plugins, 'User'));
     });
 
     after(async () => {
@@ -271,7 +232,7 @@ describe('Test User Routes', async () => {
     });
 
     it('should return an empty array', async () => {
-      await userModel.deleteMany();
+      await cleanUp(server);
       const response = await server.inject(request);
       const result = response.result as LeanUserDocument[];
       expect(Array.isArray(result)).to.be.true;
@@ -295,21 +256,16 @@ describe('Test User Routes', async () => {
   });
 
   describe('Patch User', () => {
-    let userModel: UserModel;
     let user: UserDocument;
-    let request: ServerInjectOptions;
+    let request: ServerInjectOptions & { payload: Partial<UserAttributes> };
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['patch:user'] }
+      credentials: { user: { id: 'asd123' }, scope: ['patch:user'] }
     };
 
     before(async () => {
       await cleanUp(server);
-      userModel = getModel<UserModel>(server.plugins, 'User');
-      user = await userModel.create({
-        email: 'user@test.com',
-        password: 'password1234'
-      });
+      user = await insertDummyUser(getModel(server.plugins, 'User'));
     });
 
     after(async () => {
@@ -335,17 +291,13 @@ describe('Test User Routes', async () => {
     });
 
     it('should allow patching a user email only', async () => {
-      (request.payload as { email: string }) = {
-        email: 'userpatch@test.com'
-      };
+      request.payload.email = 'userpatch@test.com';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(204);
     });
 
     it('should allow patching a user password only', async () => {
-      (request.payload as { password: string }) = {
-        password: 'patchedpassword1234'
-      };
+      request.payload.password = 'patchedpassword1234';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(204);
     });
@@ -366,23 +318,23 @@ describe('Test User Routes', async () => {
     });
 
     it('should fail when the email is short', async () => {
-      (request.payload as UserAttributes).email = 'a@b.c';
+      request.payload.email = 'a@b.c';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when password is short', async () => {
-      (request.payload as UserAttributes).password = 'new';
+      request.payload.password = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should not allow duplicate users', async () => {
-      await userModel.create({
+      await insertDummyUser(getModel(server.plugins, 'User'), {
         email: 'test2@test.com',
         password: 'password1234'
       });
-      (request.payload as UserAttributes).email = 'test2@test.com';
+      request.payload.email = 'test2@test.com';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(409);
     });
@@ -395,17 +347,12 @@ describe('Test User Routes', async () => {
   });
 
   describe('Delete User', () => {
-    let userModel: UserModel;
     let user: UserDocument;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['delete:user'] }
+      credentials: { user: { id: 'asd123' }, scope: ['delete:user'] }
     };
-
-    before(async () => {
-      userModel = getModel<UserModel>(server.plugins, 'User');
-    });
 
     after(async () => {
       await cleanUp(server);
@@ -413,7 +360,7 @@ describe('Test User Routes', async () => {
 
     beforeEach(async () => {
       await cleanUp(server);
-      user = await insertDummyUser(userModel);
+      user = await insertDummyUser(getModel(server.plugins, 'User'));
       request = {
         method: 'DELETE',
         url: '/users/' + user._id,
@@ -449,24 +396,20 @@ describe('Test User Routes', async () => {
   });
 
   describe('Update User Roles', () => {
-    let userModel: UserModel;
     let user: UserDocument;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['put:user/role'] }
+      credentials: { user: { id: 'asd123' }, scope: ['put:user/role'] }
     };
 
-    before(async () => {
-      userModel = getModel<UserModel>(server.plugins, 'User');
-    });
     after(async () => {
       await cleanUp(server);
     });
 
     beforeEach(async () => {
       await cleanUp(server);
-      user = await insertDummyUser(userModel);
+      user = await insertDummyUser(getModel(server.plugins, 'User'));
       request = {
         method: 'PUT',
         url: `/users/${user._id}/roles`,

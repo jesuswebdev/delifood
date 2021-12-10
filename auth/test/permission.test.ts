@@ -7,31 +7,21 @@ import {
   PermissionModel,
   PermissionAttributes,
   PermissionDocument,
-  AUTH_STRATEGY
+  AUTH_STRATEGY,
+  insertDummyPermission,
+  getModel,
+  LeanPermissionDocument
 } from '@delifood/common';
 import { init } from '../src/server';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { Model } from 'mongoose';
 
-function getPermissionModel(server: Server): PermissionModel {
-  return server.plugins.mongoose.connection.model('Permission');
-}
-async function truncateCollection<T>(model: Model<T>): Promise<void> {
-  await model.deleteMany();
-  return;
-}
-
-async function insertDummyPermission(
-  model: Model<PermissionDocument>,
-  text?: string
-): Promise<PermissionDocument> {
-  const p: PermissionDocument = await model.create({
-    name: `Dummy Permission${text ? ' ' + text : ''}`,
-    value: 'create:permission',
-    description: 'Dummy Permission description'
-  });
-  return p;
-}
+const cleanUp = async function cleanUp(server: Server) {
+  const permissionModel = getModel<PermissionModel>(
+    server.plugins,
+    'Permission'
+  );
+  await permissionModel.deleteMany();
+};
 
 describe('Test Permission Routes', async () => {
   let server: Server;
@@ -52,13 +42,16 @@ describe('Test Permission Routes', async () => {
   });
 
   describe('Create Permission', () => {
-    let request: ServerInjectOptions;
+    let request: ServerInjectOptions & {
+      payload: Partial<PermissionAttributes>;
+    };
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['create:permission'] }
+      credentials: { user: { id: 'asd123' }, scope: ['create:permission'] }
     };
 
-    beforeEach(done => {
+    beforeEach(async () => {
+      await cleanUp(server);
       request = {
         method: 'POST',
         url: '/permissions',
@@ -69,11 +62,6 @@ describe('Test Permission Routes', async () => {
         },
         auth: cloneObject(defaultAuthObject)
       };
-      const model = getPermissionModel(server);
-      model
-        .deleteMany()
-        .exec()
-        .then(() => done());
     });
 
     it('should create a permission', async () => {
@@ -83,32 +71,23 @@ describe('Test Permission Routes', async () => {
 
       expect(response.statusCode).to.equal(201);
       expect(result._id).to.exist;
-      expect(result.name).to.equal(
-        (request.payload as PermissionAttributes).name
-      );
-      expect(result.value).to.equal(
-        (request.payload as PermissionAttributes).value
-      );
-      expect(result.description).to.equal(
-        (request.payload as PermissionAttributes).description
-      );
+      expect(result.name).to.equal(request.payload.name);
+      expect(result.value).to.equal(request.payload.value);
+      expect(result.description).to.equal(request.payload.description);
     });
 
     it('should allow creating a permission with a slash (/)', async () => {
-      (request.payload as PermissionAttributes).value = 'create:permission/new';
+      request.payload.value = 'create:permission/new';
       const response = await server.inject(request);
-
       const result = response.result as PermissionDocument;
 
       expect(response.statusCode).to.equal(201);
       expect(result._id).to.exist;
-      expect(result.value).to.equal(
-        (request.payload as PermissionAttributes).value
-      );
+      expect(result.value).to.equal(request.payload.value);
     });
 
     it('should create a permission without description', async () => {
-      (request.payload as PermissionAttributes).description = undefined;
+      request.payload.description = undefined;
       const response = await server.inject(request);
       const result = response.result as PermissionDocument;
       expect(response.statusCode).to.equal(201);
@@ -118,7 +97,7 @@ describe('Test Permission Routes', async () => {
 
     it('should fail when entity = app', async () => {
       request.auth = cloneObject({ ...defaultAuthObject });
-      request.auth.credentials.app = 'test';
+      request.auth.credentials.app = {};
       request.auth.credentials.user = undefined;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(403);
@@ -132,13 +111,13 @@ describe('Test Permission Routes', async () => {
     });
 
     it('should fail when the name is short', async () => {
-      (request.payload as PermissionAttributes).name = 'new';
+      request.payload.name = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when description is short', async () => {
-      (request.payload as PermissionAttributes).description = 'new';
+      request.payload.description = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
@@ -151,13 +130,13 @@ describe('Test Permission Routes', async () => {
     });
 
     it('should fail when permission value does not contain a semicolon (:)', async () => {
-      (request.payload as PermissionAttributes).value = 'create/asdasd';
+      request.payload.value = 'create/asdasd';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when permission value does not have text after semicolon (:)', async () => {
-      (request.payload as PermissionAttributes).value = 'create:';
+      request.payload.value = 'create:';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
@@ -168,22 +147,18 @@ describe('Test Permission Routes', async () => {
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['get:permission'] }
+      credentials: { user: { id: 'asd123' }, scope: ['get:permission'] }
     };
 
     before(async () => {
-      const model = getPermissionModel(server);
-      await model.deleteMany();
-      permission = await model.create({
-        name: 'New Permission',
-        value: 'create:permission',
-        description: 'New Permission description'
-      });
+      await cleanUp(server);
+      permission = await insertDummyPermission(
+        getModel(server.plugins, 'Permission')
+      );
     });
 
     after(async () => {
-      const model = getPermissionModel(server);
-      await model.deleteMany();
+      await cleanUp(server);
     });
 
     beforeEach((done: Done) => {
@@ -249,21 +224,19 @@ describe('Test Permission Routes', async () => {
   });
 
   describe('List Permissions', () => {
-    let PermissionModel: PermissionModel;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['list:permission'] }
+      credentials: { user: { id: 'asd123' }, scope: ['list:permission'] }
     };
 
     before(async () => {
-      PermissionModel = getPermissionModel(server);
-      await truncateCollection(PermissionModel);
-      await insertDummyPermission(PermissionModel);
+      await cleanUp(server);
+      await insertDummyPermission(getModel(server.plugins, 'Permission'));
     });
 
     after(async () => {
-      await truncateCollection(PermissionModel);
+      await cleanUp(server);
     });
 
     beforeEach((done: Done) => {
@@ -277,7 +250,7 @@ describe('Test Permission Routes', async () => {
 
     it('should return an array of permissions', async () => {
       const response = await server.inject(request);
-      const result = response.result as PermissionDocument[];
+      const result = response.result as LeanPermissionDocument[];
       expect(Array.isArray(result)).to.be.true;
       expect(result[0]._id).to.exist;
       expect(result[0].name).to.exist;
@@ -286,7 +259,7 @@ describe('Test Permission Routes', async () => {
     });
 
     it('should return an empty array', async () => {
-      await truncateCollection(PermissionModel);
+      await cleanUp(server);
       const response = await server.inject(request);
       const result = response.result as PermissionDocument[];
       expect(Array.isArray(result)).to.be.true;
@@ -310,22 +283,24 @@ describe('Test Permission Routes', async () => {
   });
 
   describe('Patch Permission', () => {
-    let PermissionModel: PermissionModel;
+    let permissionModel: PermissionModel;
     let permission: PermissionDocument;
-    let request: ServerInjectOptions;
+    let request: ServerInjectOptions & {
+      payload: Partial<PermissionAttributes>;
+    };
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['patch:permission'] }
+      credentials: { user: { id: 'asd123' }, scope: ['patch:permission'] }
     };
 
     before(async () => {
-      PermissionModel = getPermissionModel(server);
-      await truncateCollection(PermissionModel);
-      permission = await insertDummyPermission(PermissionModel);
+      permissionModel = getModel(server.plugins, 'Permission');
+      await cleanUp(server);
+      permission = await insertDummyPermission(permissionModel);
     });
 
     after(async () => {
-      await truncateCollection(PermissionModel);
+      await cleanUp(server);
     });
 
     beforeEach((done: Done) => {
@@ -347,31 +322,25 @@ describe('Test Permission Routes', async () => {
     });
 
     it('should allow patching a permission with a slash (/)', async () => {
-      (request.payload as PermissionAttributes).value = 'create:permission/new';
+      request.payload.value = 'create:permission/new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(204);
     });
 
     it('should allow patching a permission name only', async () => {
-      (request.payload as { name: string }) = {
-        name: 'Patched name'
-      };
+      request.payload.name = 'Patched name';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(204);
     });
 
     it('should allow patching a permission value only', async () => {
-      (request.payload as { value: string }) = {
-        value: 'patch:permission/new'
-      };
+      request.payload.value = 'patch:permission/new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(204);
     });
 
     it('should allow patching a permission description only', async () => {
-      (request.payload as { description: string }) = {
-        description: 'Patched description'
-      };
+      request.payload.description = 'Patched description';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(204);
     });
@@ -392,36 +361,36 @@ describe('Test Permission Routes', async () => {
     });
 
     it('should fail when the name is short', async () => {
-      (request.payload as PermissionAttributes).name = 'new';
+      request.payload.name = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when description is short', async () => {
-      (request.payload as PermissionAttributes).description = 'new';
+      request.payload.description = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should not allow duplicate permissions', async () => {
-      await PermissionModel.create({
+      await permissionModel.create({
         name: 'New Permission',
         value: 'delete:permission',
         description: 'New Permission description'
       });
-      (request.payload as PermissionAttributes).value = 'delete:permission';
+      request.payload.value = 'delete:permission';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(409);
     });
 
     it('should fail when permission value does not contain a semicolon (:)', async () => {
-      (request.payload as PermissionAttributes).value = 'create/asdasd';
+      request.payload.value = 'create/asdasd';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when permission value does not have text after semicolon (:)', async () => {
-      (request.payload as PermissionAttributes).value = 'create:';
+      request.payload.value = 'create:';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
@@ -434,25 +403,22 @@ describe('Test Permission Routes', async () => {
   });
 
   describe('Delete Permission', () => {
-    let PermissionModel: PermissionModel;
     let permission: PermissionDocument;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['delete:permission'] }
+      credentials: { user: { id: 'asd123' }, scope: ['delete:permission'] }
     };
 
-    before(async () => {
-      PermissionModel = getPermissionModel(server);
-    });
-
     after(async () => {
-      await truncateCollection(PermissionModel);
+      await cleanUp(server);
     });
 
     beforeEach(async () => {
-      await truncateCollection(PermissionModel);
-      permission = await insertDummyPermission(PermissionModel);
+      await cleanUp(server);
+      permission = await insertDummyPermission(
+        getModel(server.plugins, 'Permission')
+      );
       request = {
         method: 'DELETE',
         url: '/permissions/' + permission._id,

@@ -4,40 +4,18 @@ import { describe, it, beforeEach, before, after, Done } from 'mocha';
 import { expect } from 'chai';
 import {
   cloneObject,
-  PermissionAttributes,
   AUTH_STRATEGY,
   getModel,
   RoleModel,
   RoleDocument,
   RoleAttributes,
   PermissionModel,
-  PermissionDocument,
-  LeanRoleDocument
+  LeanRoleDocument,
+  insertDummyPermission,
+  insertDummyRole
 } from '@delifood/common';
 import { init } from '../src/server';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-
-const insertDummyPermission = async function insertDummyPermission(
-  model: PermissionModel,
-  text?: string
-): Promise<PermissionDocument> {
-  const p = await model.create({
-    name: `Dummy Permission${text ? ' ' + text : ''}`,
-    value: 'create:permission',
-    description: 'Dummy Permission description'
-  });
-  return p;
-};
-const insertDummyRole = async function insertDummyRole(
-  model: RoleModel,
-  text?: string
-): Promise<RoleDocument> {
-  const doc = await model.create({
-    name: `Dummy role${text ? ' ' + text : ''}`,
-    description: 'Dummy role description'
-  });
-  return doc;
-};
 
 const cleanUp = async function cleanUp(server: Server) {
   const permissionModel = getModel<PermissionModel>(
@@ -46,8 +24,10 @@ const cleanUp = async function cleanUp(server: Server) {
   );
   const roleModel = getModel<RoleModel>(server.plugins, 'Role');
 
-  await permissionModel.deleteMany();
-  await roleModel.deleteMany();
+  await Promise.allSettled([
+    permissionModel.deleteMany(),
+    roleModel.deleteMany()
+  ]);
 };
 
 describe('Test Role Routes', async () => {
@@ -69,13 +49,15 @@ describe('Test Role Routes', async () => {
   });
 
   describe('Create Role', () => {
-    let request: ServerInjectOptions;
+    let request: ServerInjectOptions & { payload: Partial<RoleAttributes> };
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['create:role'] }
+      credentials: { user: { id: 'asd123' }, scope: ['create:role'] }
     };
 
-    beforeEach((done: Done) => {
+    beforeEach(async () => {
+      await cleanUp(server);
+
       request = {
         method: 'POST',
         url: '/roles',
@@ -85,11 +67,6 @@ describe('Test Role Routes', async () => {
         },
         auth: cloneObject(defaultAuthObject)
       };
-      const model = getModel<RoleModel>(server.plugins, 'Role');
-      model
-        .deleteMany()
-        .exec()
-        .then(() => done());
     });
 
     it('should create a role', async () => {
@@ -99,18 +76,14 @@ describe('Test Role Routes', async () => {
 
       expect(response.statusCode).to.equal(201);
       expect(result._id).to.exist;
-      expect(result.name).to.equal(
-        (request.payload as PermissionAttributes).name
-      );
-      expect(result.description).to.equal(
-        (request.payload as PermissionAttributes).description
-      );
+      expect(result.name).to.equal(request.payload.name);
+      expect(result.description).to.equal(request.payload.description);
     });
 
     it('should create a role without description', async () => {
-      (request.payload as RoleAttributes).description = undefined;
+      request.payload.description = undefined;
       const response = await server.inject(request);
-      const result = response.result as RoleDocument;
+      const result = response.result as LeanRoleDocument;
       expect(response.statusCode).to.equal(201);
       expect(result._id).to.exist;
       expect(result.description).to.be.undefined;
@@ -132,13 +105,13 @@ describe('Test Role Routes', async () => {
     });
 
     it('should fail when the name is short', async () => {
-      (request.payload as RoleAttributes).name = 'new';
+      request.payload.name = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when description is short', async () => {
-      (request.payload as RoleAttributes).description = 'new';
+      request.payload.description = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
@@ -156,26 +129,20 @@ describe('Test Role Routes', async () => {
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['get:role'] }
+      credentials: { user: { id: 'asd123' }, scope: ['get:role'] }
     };
 
     before(async () => {
-      const permissionModel = getModel<PermissionModel>(
-        server.plugins,
-        'Permission'
+      await cleanUp(server);
+
+      const dummyPermission = await insertDummyPermission(
+        getModel(server.plugins, 'Permission')
       );
-      const model = getModel<RoleModel>(server.plugins, 'Role');
-      await model.deleteMany();
 
-      const dummyPermission = await insertDummyPermission(permissionModel);
-
-      role = await model.create({
+      role = await insertDummyRole(getModel(server.plugins, 'Role'), {
         name: 'New Role',
-        description: 'New Role description'
+        permissions: [dummyPermission._id]
       });
-
-      role.permissions = [dummyPermission];
-      await role.save();
     });
 
     after(async () => {
@@ -245,21 +212,15 @@ describe('Test Role Routes', async () => {
   });
 
   describe('List Roles', () => {
-    let roleModel: RoleModel;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['list:role'] }
+      credentials: { user: { id: 'asd123' }, scope: ['list:role'] }
     };
 
     before(async () => {
       await cleanUp(server);
-      roleModel = getModel<RoleModel>(server.plugins, 'Role');
-
-      await roleModel.create({
-        name: 'test role',
-        description: 'test role description'
-      });
+      await insertDummyRole(getModel(server.plugins, 'Role'));
     });
 
     after(async () => {
@@ -285,7 +246,7 @@ describe('Test Role Routes', async () => {
     });
 
     it('should return an empty array', async () => {
-      await roleModel.deleteMany();
+      await cleanUp(server);
       const response = await server.inject(request);
       const result = response.result as LeanRoleDocument[];
       expect(Array.isArray(result)).to.be.true;
@@ -309,21 +270,16 @@ describe('Test Role Routes', async () => {
   });
 
   describe('Patch Role', () => {
-    let roleModel: RoleModel;
     let role: RoleDocument;
-    let request: ServerInjectOptions;
+    let request: ServerInjectOptions & { payload: Partial<RoleAttributes> };
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['patch:role'] }
+      credentials: { user: { id: 'asd123' }, scope: ['patch:role'] }
     };
 
     before(async () => {
       await cleanUp(server);
-      roleModel = getModel<RoleModel>(server.plugins, 'Role');
-      role = await roleModel.create({
-        name: 'test role',
-        description: 'test role description'
-      });
+      role = await insertDummyRole(getModel(server.plugins, 'Role'));
     });
 
     after(async () => {
@@ -349,17 +305,13 @@ describe('Test Role Routes', async () => {
     });
 
     it('should allow patching a role name only', async () => {
-      (request.payload as { name: string }) = {
-        name: 'Patched name'
-      };
+      request.payload.name = 'Patched name';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(204);
     });
 
     it('should allow patching a role description only', async () => {
-      (request.payload as { description: string }) = {
-        description: 'Patched description'
-      };
+      request.payload.description = 'Patched description';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(204);
     });
@@ -380,23 +332,22 @@ describe('Test Role Routes', async () => {
     });
 
     it('should fail when the name is short', async () => {
-      (request.payload as RoleAttributes).name = 'new';
+      request.payload.name = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when description is short', async () => {
-      (request.payload as RoleAttributes).description = 'new';
+      request.payload.description = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should not allow duplicate roles', async () => {
-      await roleModel.create({
-        name: 'patched name 2',
-        description: 'New role description'
+      await insertDummyRole(getModel(server.plugins, 'Role'), {
+        name: 'patched name 2'
       });
-      (request.payload as RoleAttributes).name = 'patched name 2';
+      request.payload.name = 'patched name 2';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(409);
     });
@@ -409,17 +360,12 @@ describe('Test Role Routes', async () => {
   });
 
   describe('Delete Role', () => {
-    let roleModel: RoleModel;
     let role: RoleDocument;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['delete:role'] }
+      credentials: { user: { id: 'asd123' }, scope: ['delete:role'] }
     };
-
-    before(async () => {
-      roleModel = getModel<RoleModel>(server.plugins, 'Role');
-    });
 
     after(async () => {
       await cleanUp(server);
@@ -427,7 +373,7 @@ describe('Test Role Routes', async () => {
 
     beforeEach(async () => {
       await cleanUp(server);
-      role = await insertDummyRole(roleModel);
+      role = await insertDummyRole(getModel(server.plugins, 'Role'));
       request = {
         method: 'DELETE',
         url: '/roles/' + role._id,
@@ -463,24 +409,20 @@ describe('Test Role Routes', async () => {
   });
 
   describe('Update Role Permissions', () => {
-    let roleModel: RoleModel;
     let role: RoleDocument;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['put:role/permission'] }
+      credentials: { user: { id: 'asd123' }, scope: ['put:role/permission'] }
     };
 
-    before(async () => {
-      roleModel = getModel<RoleModel>(server.plugins, 'Role');
-    });
     after(async () => {
       await cleanUp(server);
     });
 
     beforeEach(async () => {
       await cleanUp(server);
-      role = await insertDummyRole(roleModel);
+      role = await insertDummyRole(getModel(server.plugins, 'Role'));
       request = {
         method: 'PUT',
         url: `/roles/${role._id}/permissions`,
