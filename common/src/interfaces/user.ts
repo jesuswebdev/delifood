@@ -5,7 +5,7 @@ export interface UserAttributes {
   email: string;
   password?: string;
   enabled: boolean;
-  roles?: Types.ObjectId[] | LeanRoleDocument[] | string[];
+  roles: Types.ObjectId[] | LeanRoleDocument[] | string[];
 }
 
 export interface UserDocument extends Document, UserAttributes {}
