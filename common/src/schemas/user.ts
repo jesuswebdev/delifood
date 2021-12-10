@@ -1,4 +1,4 @@
-import { Schema, SchemaOptions } from 'mongoose';
+import { Schema, SchemaOptions, Types } from 'mongoose';
 import { UserAttributes } from '../interfaces/index';
 
 const createUserSchema = function createUserSchema(
@@ -9,7 +9,7 @@ const createUserSchema = function createUserSchema(
       email: { type: String, required: true, unique: true },
       password: { type: String, required: true, select: false },
       enabled: { type: Boolean, default: false },
-      roles: { type: [Schema.Types.ObjectId], ref: 'Role' }
+      roles: { type: [Types.ObjectId], ref: 'Role' }
     },
     { ...options }
   );

@@ -1,4 +1,4 @@
-import { Schema, SchemaOptions } from 'mongoose';
+import { Schema, SchemaOptions, Types } from 'mongoose';
 import { ProductAttributes } from '../interfaces/index';
 
 const createProductSchema = function createProductSchema(
@@ -15,8 +15,8 @@ const createProductSchema = function createProductSchema(
       rating: { type: Number },
       orders: { type: Number, default: 0 },
       sku: { type: String, unique: true },
-      tags: { type: [Schema.Types.ObjectId], ref: 'Tag' },
-      categories: { type: [Schema.Types.ObjectId], ref: 'Category' }
+      tags: { type: [Types.ObjectId], ref: 'Tag' },
+      categories: { type: [Types.ObjectId], ref: 'Category' }
     },
     { ...options }
   );

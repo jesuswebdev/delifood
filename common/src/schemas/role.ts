@@ -1,4 +1,4 @@
-import { Schema, SchemaOptions } from 'mongoose';
+import { Schema, SchemaOptions, Types } from 'mongoose';
 import { RoleAttributes } from '../interfaces/role';
 
 const createRoleSchema = function createRoleSchema(
@@ -8,7 +8,7 @@ const createRoleSchema = function createRoleSchema(
     {
       name: { type: String, required: true, unique: true },
       description: { type: String },
-      permissions: { type: [Schema.Types.ObjectId], ref: 'Permission' }
+      permissions: { type: [Types.ObjectId], ref: 'Permission' }
     },
     { ...options }
   );
