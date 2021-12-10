@@ -9,7 +9,8 @@ import {
   CategoryModel,
   CategoryDocument,
   CategoryAttributes,
-  LeanCategoryDocument
+  LeanCategoryDocument,
+  insertDummyCategory
 } from '@delifood/common';
 import { init } from '../src/server';
 import { MongoMemoryServer } from 'mongodb-memory-server';
@@ -18,17 +19,6 @@ const cleanUp = async function cleanUp(server: Server) {
   const categoryModel = getModel<CategoryModel>(server.plugins, 'Category');
   await categoryModel.deleteMany();
 };
-
-async function insertDummyCategory(
-  model: CategoryModel,
-  text?: string
-): Promise<CategoryDocument> {
-  const p: CategoryDocument = await model.create({
-    name: text ?? 'Dummy Category',
-    description: 'Dummy category description'
-  });
-  return p;
-}
 
 describe('Test Category Routes', async () => {
   let server: Server;
@@ -49,13 +39,14 @@ describe('Test Category Routes', async () => {
   });
 
   describe('Create Category', () => {
-    let request: ServerInjectOptions;
+    let request: ServerInjectOptions & { payload: Partial<CategoryAttributes> };
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['create:category'] }
+      credentials: { user: { id: 'asd123' }, scope: ['create:category'] }
     };
 
-    beforeEach(done => {
+    beforeEach(async () => {
+      await cleanUp(server);
       request = {
         method: 'POST',
         url: '/categories',
@@ -65,11 +56,6 @@ describe('Test Category Routes', async () => {
         },
         auth: cloneObject(defaultAuthObject)
       };
-      const model = getModel<CategoryModel>(server.plugins, 'Category');
-      model
-        .deleteMany()
-        .exec()
-        .then(() => done());
     });
 
     it('should create a category', async () => {
@@ -79,16 +65,12 @@ describe('Test Category Routes', async () => {
 
       expect(response.statusCode).to.equal(201);
       expect(result._id).to.exist;
-      expect(result.name).to.equal(
-        (request.payload as CategoryAttributes).name
-      );
-      expect(result.description).to.equal(
-        (request.payload as CategoryAttributes).description
-      );
+      expect(result.name).to.equal(request.payload.name);
+      expect(result.description).to.equal(request.payload.description);
     });
 
     it('should create a category without description', async () => {
-      (request.payload as CategoryAttributes).description = undefined;
+      request.payload.description = undefined;
       const response = await server.inject(request);
       const result = response.result as LeanCategoryDocument;
       expect(response.statusCode).to.equal(201);
@@ -112,13 +94,13 @@ describe('Test Category Routes', async () => {
     });
 
     it('should fail when the name is short', async () => {
-      (request.payload as CategoryAttributes).name = 'new';
+      request.payload.name = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when description is short', async () => {
-      (request.payload as CategoryAttributes).description = 'new';
+      request.payload.description = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
@@ -136,16 +118,14 @@ describe('Test Category Routes', async () => {
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['get:category'] }
+      credentials: { user: { id: 'asd123' }, scope: ['get:category'] }
     };
 
     before(async () => {
-      const model = getModel<CategoryModel>(server.plugins, 'Category');
       await cleanUp(server);
-      category = await model.create({
-        name: 'New Category',
-        description: 'New Category description'
-      });
+      category = await insertDummyCategory(
+        getModel(server.plugins, 'Category')
+      );
     });
 
     after(async () => {
@@ -214,17 +194,15 @@ describe('Test Category Routes', async () => {
   });
 
   describe('List Categories', () => {
-    let categoryModel: CategoryModel;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['list:category'] }
+      credentials: { user: { id: 'asd123' }, scope: ['list:category'] }
     };
 
     before(async () => {
-      categoryModel = getModel<CategoryModel>(server.plugins, 'Category');
       await cleanUp(server);
-      await insertDummyCategory(categoryModel);
+      await insertDummyCategory(getModel(server.plugins, 'Category'));
     });
 
     after(async () => {
@@ -274,18 +252,18 @@ describe('Test Category Routes', async () => {
   });
 
   describe('Patch Category', () => {
-    let categoryModel: CategoryModel;
     let category: CategoryDocument;
-    let request: ServerInjectOptions;
+    let request: ServerInjectOptions & { payload: Partial<CategoryAttributes> };
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['patch:category'] }
+      credentials: { user: { id: 'asd123' }, scope: ['patch:category'] }
     };
 
     before(async () => {
-      categoryModel = getModel<CategoryModel>(server.plugins, 'Category');
       await cleanUp(server);
-      category = await insertDummyCategory(categoryModel);
+      category = await insertDummyCategory(
+        getModel(server.plugins, 'Category')
+      );
     });
 
     after(async () => {
@@ -311,17 +289,13 @@ describe('Test Category Routes', async () => {
     });
 
     it('should allow patching a category name only', async () => {
-      (request.payload as { name: string }) = {
-        name: 'Patched name'
-      };
+      request.payload.name = 'Patched name';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(204);
     });
 
     it('should allow patching a category description only', async () => {
-      (request.payload as { description: string }) = {
-        description: 'Patched description'
-      };
+      request.payload.description = 'Patched description';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(204);
     });
@@ -342,23 +316,22 @@ describe('Test Category Routes', async () => {
     });
 
     it('should fail when the name is short', async () => {
-      (request.payload as CategoryAttributes).name = 'new';
+      request.payload.name = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when description is short', async () => {
-      (request.payload as CategoryAttributes).description = 'new';
+      request.payload.description = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should not allow duplicate categories', async () => {
-      await categoryModel.create({
-        name: 'New Category',
-        description: 'New Category description'
+      await insertDummyCategory(getModel(server.plugins, 'Category'), {
+        name: 'New Category'
       });
-      (request.payload as CategoryAttributes).name = 'New Category';
+      request.payload.name = 'New Category';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(409);
     });
@@ -371,17 +344,13 @@ describe('Test Category Routes', async () => {
   });
 
   describe('Delete Category', () => {
-    let categoryModel: CategoryModel;
     let category: CategoryDocument;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['delete:category'] }
+      credentials: { user: { id: 'asd123' }, scope: ['delete:category'] }
     };
 
-    before(async () => {
-      categoryModel = getModel<CategoryModel>(server.plugins, 'Category');
-    });
 
     after(async () => {
       await cleanUp(server);
@@ -389,7 +358,9 @@ describe('Test Category Routes', async () => {
 
     beforeEach(async () => {
       await cleanUp(server);
-      category = await insertDummyCategory(categoryModel);
+      category = await insertDummyCategory(
+        getModel(server.plugins, 'Category')
+      );
       request = {
         method: 'DELETE',
         url: '/categories/' + category._id,

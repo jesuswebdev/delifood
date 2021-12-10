@@ -9,20 +9,11 @@ import {
   TagDocument,
   TagModel,
   TagAttributes,
-  LeanTagDocument
+  LeanTagDocument,
+  insertDummyTag
 } from '@delifood/common';
 import { init } from '../src/server';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-
-async function insertDummyTag(
-  model: TagModel,
-  text?: string
-): Promise<TagDocument> {
-  const p: TagDocument = await model.create({
-    value: text ?? 'dummy tag'
-  });
-  return p;
-}
 
 const cleanUp = async function cleanUp(server: Server) {
   const tagModel = getModel<TagModel>(server.plugins, 'Tag');
@@ -48,24 +39,20 @@ describe('Test Tag Routes', async () => {
   });
 
   describe('Create Tag', () => {
-    let request: ServerInjectOptions;
+    let request: ServerInjectOptions & { payload: Partial<TagAttributes> };
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['create:tag'] }
+      credentials: { user: { id: 'asd123' }, scope: ['create:tag'] }
     };
 
-    beforeEach(done => {
+    beforeEach(async () => {
+      await cleanUp(server);
       request = {
         method: 'POST',
         url: '/tags',
         payload: { value: 'new tag' },
         auth: cloneObject(defaultAuthObject)
       };
-      const model = getModel<TagModel>(server.plugins, 'Tag');
-      model
-        .deleteMany()
-        .exec()
-        .then(() => done());
     });
 
     it('should create a tag', async () => {
@@ -75,7 +62,7 @@ describe('Test Tag Routes', async () => {
 
       expect(response.statusCode).to.equal(201);
       expect(result._id).to.exist;
-      expect(result.value).to.equal((request.payload as TagAttributes).value);
+      expect(result.value).to.equal(request.payload.value);
     });
 
     it('should fail when entity = app', async () => {
@@ -94,14 +81,13 @@ describe('Test Tag Routes', async () => {
     });
 
     it('should fail when the value is short', async () => {
-      (request.payload as TagAttributes).value = 'a';
+      request.payload.value = 'a';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when the value exceeds the allowed length', async () => {
-      (request.payload as TagAttributes).value =
-        '123123123123123123123123123123123';
+      request.payload.value = '123123123123123123123123123123123';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
@@ -119,7 +105,7 @@ describe('Test Tag Routes', async () => {
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['list:tag'] }
+      credentials: { user: { id: 'asd123' }, scope: ['list:tag'] }
     };
 
     before(async () => {
@@ -174,17 +160,12 @@ describe('Test Tag Routes', async () => {
   });
 
   describe('Delete Tag', () => {
-    let tagModel: TagModel;
     let tag: TagDocument;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['delete:tag'] }
+      credentials: { user: { id: 'asd123' }, scope: ['delete:tag'] }
     };
-
-    before(async () => {
-      tagModel = getModel<TagModel>(server.plugins, 'Tag');
-    });
 
     after(async () => {
       await cleanUp(server);
@@ -192,7 +173,7 @@ describe('Test Tag Routes', async () => {
 
     beforeEach(async () => {
       await cleanUp(server);
-      tag = await insertDummyTag(tagModel);
+      tag = await insertDummyTag(getModel(server.plugins, 'Tag'));
       request = {
         method: 'DELETE',
         url: '/tags/' + tag._id,

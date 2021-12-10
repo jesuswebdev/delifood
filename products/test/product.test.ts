@@ -23,9 +23,11 @@ const cleanUp = async function cleanUp(server: Server) {
   const productModel = getModel<ProductModel>(server.plugins, 'Product');
   const tagModel = getModel<TagModel>(server.plugins, 'Tag');
   const categoryModel = getModel<CategoryModel>(server.plugins, 'Category');
-  await productModel.deleteMany();
-  await tagModel.deleteMany();
-  await categoryModel.deleteMany();
+  await Promise.allSettled([
+    productModel.deleteMany(),
+    tagModel.deleteMany(),
+    categoryModel.deleteMany()
+  ]);
 };
 
 describe('Test Product Routes', async () => {
@@ -47,13 +49,15 @@ describe('Test Product Routes', async () => {
   });
 
   describe('Create Product', () => {
-    let request: ServerInjectOptions;
+    let request: ServerInjectOptions & { payload: Partial<ProductAttributes> };
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['create:product'] }
+      credentials: { user: { id: 'asd123' }, scope: ['create:product'] }
     };
 
-    beforeEach(done => {
+    beforeEach(async () => {
+      await cleanUp(server);
+
       request = {
         method: 'POST',
         url: '/products',
@@ -66,18 +70,13 @@ describe('Test Product Routes', async () => {
         },
         auth: cloneObject(defaultAuthObject)
       };
-      const model = getModel<ProductModel>(server.plugins, 'Product');
-      model
-        .deleteMany()
-        .exec()
-        .then(() => done());
     });
 
     it('should create a product', async () => {
       const response = await server.inject(request);
 
       const result = response.result as ProductDocument;
-      const payload = request.payload as ProductAttributes;
+      const payload = request.payload;
 
       expect(response.statusCode).to.equal(201);
       expect(result._id).to.exist;
@@ -90,16 +89,14 @@ describe('Test Product Routes', async () => {
     });
 
     it('should create a product with discount', async () => {
-      request.payload = { ...(request.payload as object), discount: 10 };
+      request.payload.discount = 10;
       const response = await server.inject(request);
 
       const result = response.result as LeanProductDocument;
 
       expect(response.statusCode).to.equal(201);
       expect(result._id).to.exist;
-      expect(result.discount).to.equal(
-        (request.payload as ProductAttributes).discount
-      );
+      expect(result.discount).to.equal(request.payload.discount);
     });
 
     it('should create a product with categories', async () => {
@@ -107,9 +104,7 @@ describe('Test Product Routes', async () => {
         getModel(server.plugins, 'Category')
       );
 
-      (request.payload as ProductAttributes).categories = [
-        category._id.toString()
-      ];
+      request.payload.categories = [category._id.toString()];
 
       const response = await server.inject(request);
 
@@ -118,14 +113,14 @@ describe('Test Product Routes', async () => {
       expect(response.statusCode).to.equal(201);
       expect(result._id).to.exist;
       expect(Array.isArray(result.categories)).to.be.true;
-      expect((result.categories ?? []).length).to.equal(1);
-      expect((result.categories ?? [])[0]).to.be.a.string;
+      expect(result.categories.length).to.equal(1);
+      expect(result.categories[0]).to.be.a.string;
     });
 
     it('should create a product with tags', async () => {
       const tag = await insertDummyTag(getModel(server.plugins, 'Tag'));
 
-      (request.payload as ProductAttributes).tags = [tag._id.toString()];
+      request.payload.tags = [tag._id.toString()];
 
       const response = await server.inject(request);
 
@@ -134,12 +129,12 @@ describe('Test Product Routes', async () => {
       expect(response.statusCode).to.equal(201);
       expect(result._id).to.exist;
       expect(Array.isArray(result.tags)).to.be.true;
-      expect((result.tags ?? []).length).to.equal(1);
-      expect((result.tags ?? [])[0]).to.be.a.string;
+      expect(result.tags.length).to.equal(1);
+      expect(result.tags[0]).to.be.a.string;
     });
 
     it('should create a product without description', async () => {
-      (request.payload as ProductAttributes).description = undefined;
+      request.payload.description = undefined;
       const response = await server.inject(request);
       const result = response.result as LeanProductDocument;
       expect(response.statusCode).to.equal(201);
@@ -163,7 +158,7 @@ describe('Test Product Routes', async () => {
     });
 
     it('should fail when the name is short', async () => {
-      (request.payload as ProductAttributes).name = 'new';
+      request.payload.name = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
@@ -176,72 +171,67 @@ describe('Test Product Routes', async () => {
     });
 
     it('should not allow passing the rating property when creating a product', async () => {
-      (request.payload as ProductAttributes).rating = 1;
+      request.payload.rating = 1;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should not allow passing the orders property when creating a product', async () => {
-      (request.payload as ProductAttributes).orders = 1;
+      request.payload.orders = 1;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should not allow negative prices', async () => {
-      (request.payload as ProductAttributes).price = -1;
+      request.payload.price = -1;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should not allow prices with precision', async () => {
-      (request.payload as ProductAttributes).rating = 1.3;
+      request.payload.rating = 1.3;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when passing invalid image uri', async () => {
-      (request.payload as ProductAttributes).images = ['htt123123net'];
+      request.payload.images = ['htt123123net'];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when passing duplicate image uri', async () => {
-      (request.payload as ProductAttributes).images = [
-        'http://cats.com',
-        'http://cats.com'
-      ];
+      request.payload.images = ['http://cats.com', 'http://cats.com'];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(422);
     });
 
     it('should fail when passing negative discount', async () => {
-      (request.payload as ProductAttributes).discount = -10;
+      request.payload.discount = -10;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when passing discount with precision', async () => {
-      (request.payload as ProductAttributes).discount = 1.3;
+      request.payload.discount = 1.3;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when category id is not of the required length', async () => {
-      (request.payload as ProductAttributes).categories = ['ababab'];
+      request.payload.categories = ['ababab'];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when creating a product with a non existant category', async () => {
-      (request.payload as ProductAttributes).categories = [
-        'abababababababababababab'
-      ];
+      request.payload.categories = ['abababababababababababab'];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(422);
     });
 
     it('should fail when creating a product with duplicate categories', async () => {
-      (request.payload as ProductAttributes).images = [
+      request.payload.images = [
         'abababababababababababab',
         'abababababababababababab'
       ];
@@ -250,21 +240,19 @@ describe('Test Product Routes', async () => {
     });
 
     it('should fail when tag id is not of the required length', async () => {
-      (request.payload as ProductAttributes).tags = ['ababab'];
+      request.payload.tags = ['ababab'];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when creating a product with a non existant tag', async () => {
-      (request.payload as ProductAttributes).tags = [
-        'abababababababababababab'
-      ];
+      request.payload.tags = ['abababababababababababab'];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(422);
     });
 
     it('should fail when creating a product with duplicate tags', async () => {
-      (request.payload as ProductAttributes).tags = [
+      request.payload.tags = [
         'abababababababababababab',
         'abababababababababababab'
       ];
@@ -278,7 +266,7 @@ describe('Test Product Routes', async () => {
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['get:product'] }
+      credentials: { user: { id: 'asd123' }, scope: ['get:product'] }
     };
 
     before(async () => {
@@ -364,23 +352,21 @@ describe('Test Product Routes', async () => {
       expect(result.description).to.exist;
       expect(result.categories).to.exist;
       expect(result.tags).to.exist;
-      expect((result.tags ?? []).length).to.equal(1);
-      expect((result.categories ?? []).length).to.equal(1);
+      expect(result.tags.length).to.equal(1);
+      expect(result.categories.length).to.equal(1);
     });
   });
 
   describe('List Products', () => {
-    let productModel: ProductModel;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['list:product'] }
+      credentials: { user: { id: 'asd123' }, scope: ['list:product'] }
     };
 
     before(async () => {
-      productModel = getModel<ProductModel>(server.plugins, 'Product');
       await cleanUp(server);
-      await insertDummyProduct(productModel);
+      await insertDummyProduct(getModel(server.plugins, 'Product'));
     });
 
     after(async () => {
@@ -425,19 +411,24 @@ describe('Test Product Routes', async () => {
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(403);
     });
+
+    it('should not list disabled items', async () => {
+      request.auth = cloneObject({ ...defaultAuthObject });
+      request.auth.credentials.scope = ['save:permission'];
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(403);
+    });
   });
 
   describe('Patch Product', () => {
-    let productModel: ProductModel;
     let product: ProductDocument;
-    let request: ServerInjectOptions;
+    let request: ServerInjectOptions & { payload: Partial<ProductAttributes> };
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['patch:product'] }
+      credentials: { user: { id: 'asd123' }, scope: ['patch:product'] }
     };
 
     before(async () => {
-      productModel = getModel(server.plugins, 'Product');
       await cleanUp(server);
     });
 
@@ -447,14 +438,7 @@ describe('Test Product Routes', async () => {
 
     beforeEach(async () => {
       await cleanUp(server);
-
-      product = await insertDummyProduct(productModel, {
-        name: 'New Product',
-        description: 'a product description',
-        sku: 'abc123',
-        price: 1337
-      });
-
+      product = await insertDummyProduct(getModel(server.plugins, 'Product'));
       request = {
         method: 'PATCH',
         url: '/products/' + product._id,
@@ -469,85 +453,84 @@ describe('Test Product Routes', async () => {
       const response = await server.inject(request);
 
       const result = response.result as LeanProductDocument;
-      const payload = request.payload as ProductAttributes;
+      const payload = request.payload;
 
       expect(response.statusCode).to.equal(200);
       expect(result.name).to.equal(payload.name);
     });
 
     it('should patch the description of the product', async () => {
-      (request.payload as { description: string }).description =
-        'new description';
+      request.payload.description = 'new description';
       const response = await server.inject(request);
 
       const result = response.result as LeanProductDocument;
-      const payload = request.payload as ProductAttributes;
+      const payload = request.payload;
 
       expect(response.statusCode).to.equal(200);
       expect(result.description).to.equal(payload.description);
     });
 
     it('should patch the description of the product to an empty string', async () => {
-      (request.payload as { description: string }).description = '';
+      request.payload.description = '';
       const response = await server.inject(request);
 
       const result = response.result as LeanProductDocument;
-      const payload = request.payload as ProductAttributes;
+      const payload = request.payload;
 
       expect(response.statusCode).to.equal(200);
       expect(result.description).to.equal(payload.description);
     });
 
     it('should patch the sku of the product', async () => {
-      (request.payload as { sku: string }).sku = 'new sku';
+      request.payload.sku = 'new sku';
       const response = await server.inject(request);
 
       const result = response.result as LeanProductDocument;
-      const payload = request.payload as ProductAttributes;
+      const payload = request.payload;
 
       expect(response.statusCode).to.equal(200);
       expect(result.sku).to.equal(payload.sku);
     });
 
     it('should patch the price of the product', async () => {
-      (request.payload as { price: number }).price = 1000;
+      request.payload.price = 1000;
       const response = await server.inject(request);
 
       const result = response.result as LeanProductDocument;
-      const payload = request.payload as ProductAttributes;
+      const payload = request.payload;
 
       expect(response.statusCode).to.equal(200);
       expect(result.price).to.equal(payload.price);
     });
 
     it('should patch the images of the product', async () => {
-      (request.payload as { images: string[] }).images = ['http://dogs.com'];
+      request.payload.images = ['http://dogs.com'];
       const response = await server.inject(request);
 
       const result = response.result as LeanProductDocument;
-      const payload = request.payload as ProductAttributes;
+      const payload = request.payload;
 
       expect(response.statusCode).to.equal(200);
       expect((result.images ?? [])[0]).to.equal((payload.images ?? [])[0]);
     });
 
     it('should patch the discount of the product', async () => {
-      (request.payload as { discount: number }).discount = 100;
+      request.payload.discount = 100;
       const response = await server.inject(request);
 
       const result = response.result as LeanProductDocument;
-      const payload = request.payload as ProductAttributes;
+      const payload = request.payload;
 
       expect(response.statusCode).to.equal(200);
       expect(result.discount).to.equal(payload.discount);
     });
 
     it('should disable the product', async () => {
-      (request.payload as { enabled: boolean }).enabled = false;
+      request.payload.enabled = false;
       const response = await server.inject(request);
 
       const result = response.result as LeanProductDocument;
-      const payload = request.payload as ProductAttributes;
+      const payload = request.payload;
 
       expect(response.statusCode).to.equal(200);
       expect(result.enabled).to.equal(payload.enabled);
@@ -569,94 +552,88 @@ describe('Test Product Routes', async () => {
     });
 
     it('should fail when the name is short', async () => {
-      (request.payload as ProductAttributes).name = 'new';
+      request.payload.name = 'new';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should not allow duplicate products', async () => {
-      await insertDummyProduct(productModel);
-      (request.payload as { sku: string }).sku = 'asdf123';
+      await insertDummyProduct(getModel(server.plugins, 'Product'), {
+        sku: 'qwe123'
+      });
+      request.payload.sku = 'qwe123';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(409);
     });
 
     it('should not allow passing the rating property when patching a product', async () => {
-      (request.payload as ProductAttributes).rating = 1;
+      request.payload.rating = 1;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should not allow passing the orders property when patching a product', async () => {
-      (request.payload as ProductAttributes).orders = 1;
+      request.payload.orders = 1;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should not allow negative prices', async () => {
-      (request.payload as ProductAttributes).price = -1;
+      request.payload.price = -1;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should not allow prices with precision', async () => {
-      (request.payload as ProductAttributes).rating = 1.3;
+      request.payload.rating = 1.3;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when passing invalid image uri', async () => {
-      (request.payload as ProductAttributes).images = ['htt123123net'];
+      request.payload.images = ['htt123123net'];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when passing duplicate image uri', async () => {
-      (request.payload as ProductAttributes).images = [
-        'http://cats.com',
-        'http://cats.com'
-      ];
+      request.payload.images = ['http://cats.com', 'http://cats.com'];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(422);
     });
 
     it('should fail when passing negative discount', async () => {
-      (request.payload as ProductAttributes).discount = -10;
+      request.payload.discount = -10;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when passing discount with precision', async () => {
-      (request.payload as ProductAttributes).discount = 1.3;
+      request.payload.discount = 1.3;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when trying to patch the categories', async () => {
-      (request.payload as ProductAttributes).categories = ['ababab'];
+      request.payload.categories = ['ababab'];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when trying to patch the tags', async () => {
-      (request.payload as ProductAttributes).tags = ['ababab'];
+      request.payload.tags = ['ababab'];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
   });
 
   describe('Delete Product', () => {
-    let productModel: ProductModel;
     let product: ProductDocument;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['delete:product'] }
+      credentials: { user: { id: 'asd123' }, scope: ['delete:product'] }
     };
-
-    before(async () => {
-      productModel = getModel(server.plugins, 'Product');
-    });
 
     after(async () => {
       await cleanUp(server);
@@ -664,7 +641,7 @@ describe('Test Product Routes', async () => {
 
     beforeEach(async () => {
       await cleanUp(server);
-      product = await insertDummyProduct(productModel);
+      product = await insertDummyProduct(getModel(server.plugins, 'Product'));
       request = {
         method: 'DELETE',
         url: '/products/' + product._id,
@@ -700,24 +677,20 @@ describe('Test Product Routes', async () => {
   });
 
   describe('Update Product Categories', () => {
-    let productModel: ProductModel;
     let product: ProductDocument;
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['put:product/categories'] }
+      credentials: { user: { id: 'asd123' }, scope: ['put:product/categories'] }
     };
 
-    before(async () => {
-      productModel = getModel(server.plugins, 'Product');
-    });
     after(async () => {
       await cleanUp(server);
     });
 
     beforeEach(async () => {
       await cleanUp(server);
-      product = await insertDummyProduct(productModel);
+      product = await insertDummyProduct(getModel(server.plugins, 'Product'));
       request = {
         method: 'PUT',
         url: `/products/${product._id}/categories`,
@@ -735,8 +708,8 @@ describe('Test Product Routes', async () => {
       const result = response.result as LeanProductDocument;
       expect(response.statusCode).to.equal(200);
       expect(Array.isArray(result.categories)).to.be.true;
-      expect((result.categories ?? []).length).to.equal(1);
-      expect((result.categories ?? [])[0]).to.be.a.string;
+      expect(result.categories.length).to.equal(1);
+      expect(result.categories[0]).to.be.a.string;
     });
 
     it('should update product categories to an empty array', async () => {
@@ -745,7 +718,7 @@ describe('Test Product Routes', async () => {
       const result = response.result as LeanProductDocument;
       expect(response.statusCode).to.equal(200);
       expect(Array.isArray(result.categories)).to.be.true;
-      expect((result.categories ?? []).length).to.equal(0);
+      expect(result.categories.length).to.equal(0);
     });
 
     it('should fail when the payload is not an array', async () => {
@@ -809,7 +782,7 @@ describe('Test Product Routes', async () => {
     let request: ServerInjectOptions;
     const defaultAuthObject = {
       strategy: AUTH_STRATEGY.TOKEN_AUTH,
-      credentials: { user: 'test', scope: ['put:product/tags'] }
+      credentials: { user: { id: 'asd123' }, scope: ['put:product/tags'] }
     };
 
     before(async () => {
@@ -837,8 +810,8 @@ describe('Test Product Routes', async () => {
       const result = response.result as LeanProductDocument;
       expect(response.statusCode).to.equal(200);
       expect(Array.isArray(result.tags)).to.be.true;
-      expect((result.tags ?? []).length).to.equal(1);
-      expect((result.tags ?? [])[0]).to.be.a.string;
+      expect(result.tags.length).to.equal(1);
+      expect(result.tags[0]).to.be.a.string;
     });
 
     it('should update user roles to an empty array', async () => {
@@ -847,7 +820,7 @@ describe('Test Product Routes', async () => {
       const result = response.result as LeanProductDocument;
       expect(response.statusCode).to.equal(200);
       expect(Array.isArray(result.tags)).to.be.true;
-      expect((result.tags ?? []).length).to.equal(0);
+      expect(result.tags.length).to.equal(0);
     });
 
     it('should fail when the payload is not an array', async () => {
