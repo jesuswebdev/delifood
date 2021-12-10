@@ -16,8 +16,11 @@ import {
   TagAttributes,
   ProductModel,
   ProductDocument,
-  ProductAttributes
-} from './index';
+  ProductAttributes,
+  CartModel,
+  CartAttributes,
+  CartDocument
+} from './interfaces';
 
 export const insertDummyPermission = async function insertDummyPermission(
   model: PermissionModel,
@@ -91,5 +94,13 @@ export const insertDummyProduct = async function insertDummyProduct(
     images: ['http://cats.com'],
     ...props
   });
+  return doc;
+};
+
+export const insertDummyCart = async function insertDummyCart(
+  model: CartModel,
+  props?: Partial<CartAttributes>
+): Promise<CartDocument> {
+  const doc = await model.create(props);
   return doc;
 };
