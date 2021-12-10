@@ -136,7 +136,15 @@ const authRoutesPlugin = {
           };
 
           const token = await Iron.seal(
-            { ...userProps, id: foundUser._id, issuedAt: Date.now() },
+            {
+              user: {
+                ...userProps,
+                id: foundUser._id,
+                email: undefined
+              },
+              issuedAt: Date.now(),
+              expiresAt: 36e5 * 24
+            },
             options.ironSecret,
             Iron.defaults
           );
