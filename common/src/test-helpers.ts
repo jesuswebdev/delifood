@@ -110,16 +110,16 @@ export const insertDummyProduct = async function insertDummyProduct(
 export const getRequestObject = function getRequestObject<T>(
   props: ServerInjectObject<T>
 ) {
-  return function (overrides: ServerInjectObject<T>): ServerInjectObject<T> {
+  return function (overrides?: ServerInjectObject<T>): ServerInjectObject<T> {
     return {
       ...props,
       ...overrides,
       auth: {
         ...props.auth,
-        ...overrides.auth,
+        ...overrides?.auth,
         credentials: {
           ...props.auth.credentials,
-          ...overrides.auth.credentials
+          ...overrides?.auth?.credentials
         }
       }
     };
