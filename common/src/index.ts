@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { PluginProperties } from '@hapi/hapi';
-import { ConsumeMessage } from 'amqplib';
+import { StringCodec } from 'nats';
 
 declare module '@hapi/hapi' {
   export interface PluginProperties {
@@ -42,15 +42,15 @@ export const assertNonDuplicateIds = function assertNonDuplicateIds(
   return true;
 };
 
-export const encodeRabbitMqMessage = function encodeRabbitMqMessage<T>(
-  data: T
-): Buffer {
-  return Buffer.from(JSON.stringify(data));
+export const encodeNATSMessage = function encodeNATSMessage<T>(data: T) {
+  const sc = StringCodec();
+  return sc.encode(JSON.stringify(data));
 };
-export const decodeRabbitMqMessage = function decodeRabbitMqMessage<T>(
-  msg: ConsumeMessage
+export const decodeNATSMessage = function decodeNATSMessage<T>(
+  msg: Uint8Array
 ): T {
-  return JSON.parse(msg.content.toString());
+  const sc = StringCodec();
+  return JSON.parse(sc.decode(msg));
 };
 
 export * from './interfaces/index';
