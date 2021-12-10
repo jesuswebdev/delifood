@@ -14,7 +14,7 @@ const ROUTES_VALIDATION = {
   query: {}
 };
 
-export default {
+const userRoutes = {
   name: 'users routes',
   version: '1.0.0',
   register: async function (server: Server) {
@@ -100,3 +100,5 @@ export default {
     });
   }
 };
+
+export { userRoutes };

@@ -25,7 +25,7 @@ const ROUTES_VALIDATION = {
   query: {}
 };
 
-export default {
+const permissionRoutes = {
   name: 'permission routes',
   version: '1.0.0',
   async register(server: Server) {
@@ -98,3 +98,5 @@ export default {
     });
   }
 };
+
+export { permissionRoutes };

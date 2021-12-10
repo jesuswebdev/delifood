@@ -59,7 +59,7 @@ const authRoutesPlugin = {
         h: ResponseToolkit
       ): Promise<ResponseValue> {
         try {
-          const publish = server.plugins.rabbitmq.publish;
+          const publish = server.plugins.nats.publish;
           const payload = request.payload as UserAttributes;
           const userModel = getModel<UserModel>(request.server.plugins, 'User');
           const roleModel = getModel<RoleModel>(request.server.plugins, 'Role');
@@ -74,7 +74,7 @@ const authRoutesPlugin = {
             roles: [userRole._id]
           });
 
-          publish(QUEUE_CHANNELS.USER_CREATED, { id: user._id });
+          publish(QUEUE_CHANNELS.USER_CREATED, user);
 
           return h.response().code(201);
         } catch (error: unknown) {
@@ -143,7 +143,7 @@ const authRoutesPlugin = {
                 email: undefined
               },
               issuedAt: Date.now(),
-              expiresAt: 36e5 * 24
+              expiresAt: Date.now() + 36e5 * 24
             },
             options.ironSecret,
             Iron.defaults

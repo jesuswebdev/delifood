@@ -13,7 +13,7 @@ const ROUTES_VALIDATION = {
   query: {}
 };
 
-export default {
+const roleRoutes = {
   name: 'roles routes',
   version: '1.0.0',
   register: async function (server: Server) {
@@ -97,3 +97,5 @@ export default {
     });
   }
 };
+
+export { roleRoutes };

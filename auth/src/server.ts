@@ -2,23 +2,23 @@ import Hapi, { Server } from '@hapi/hapi';
 import {
   tokenAuthStrategy,
   MongoosePlugin,
-  RabbitMQPlugin,
+  NATSPlugin,
   UserCredentials as HapiUserCredentials
 } from '@delifood/common';
-import { PORT, MONGODB_URI, IRON_SECRET, RABBITMQ_URI } from './config/index';
+import { PORT, MONGODB_URI, IRON_SECRET, NATS_URI } from './config/index';
 import { mongoosePlugin } from './plugins/mongoose';
-import { rabbitMqPlugin } from './plugins/rabbitmq';
+import { natsPlugin } from './plugins/nats';
 import { authRoutesPlugin } from './plugins/user-auth-routes';
-import permissionRoutes from './entity/permission/routes';
-import roleRoutes from './entity/role/routes';
-import userRoutes from './entity/user/routes';
+import { permissionRoutes } from './entity/permission/routes';
+import { roleRoutes } from './entity/role/routes';
+import { userRoutes } from './entity/user/routes';
 
 declare module '@hapi/hapi' {
   export interface PluginProperties {
     // eslint-disable-next-line
     [key: string]: any;
     mongoose: MongoosePlugin;
-    rabbitmq: RabbitMQPlugin;
+    nats: NATSPlugin;
   }
   // eslint-disable-next-line
   export interface UserCredentials extends HapiUserCredentials {}
@@ -31,17 +31,18 @@ interface InitServerConfig {
 }
 
 export const init = async function init(config?: InitServerConfig) {
-  server = Hapi.server({ host: 'localhost', port: PORT });
+  server = Hapi.server({
+    host: 'localhost',
+    port: PORT,
+    routes: { cors: true }
+  });
 
   await server.register([
     {
       plugin: mongoosePlugin,
       options: { uri: config?.mongodbUri ?? MONGODB_URI }
     },
-    {
-      plugin: rabbitMqPlugin,
-      options: { uri: RABBITMQ_URI }
-    },
+    { plugin: natsPlugin, options: { uri: NATS_URI } },
     { plugin: tokenAuthStrategy, options: { ironSecret: IRON_SECRET } },
     { plugin: permissionRoutes, routes: { prefix: '/permissions' } },
     { plugin: roleRoutes, routes: { prefix: '/roles' } },

@@ -34,13 +34,13 @@ export async function createUser(
   h: ResponseToolkit
 ): Promise<ResponseObject | ResponseValue> {
   try {
-    const publish = request.server.plugins.rabbitmq.publish;
+    const publish = request.server.plugins.nats.publish;
     const payload = request.payload as UserAttributes;
     const userModel = getModel<UserModel>(request.server.plugins, 'User');
     const saved = await userModel.create(payload);
     const sanitized = saved.toJSON();
     sanitized.password = undefined;
-    publish(QUEUE_CHANNELS.USER_CREATED, { id: sanitized._id });
+    publish(QUEUE_CHANNELS.USER_CREATED, sanitized);
     return h.response(sanitized).code(201);
   } catch (error: unknown) {
     if ((error as MongoError)?.code === 11000) {
