@@ -19,19 +19,6 @@ import {
   ProductAttributes
 } from './index';
 
-interface ServerInjectObject<T> {
-  method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
-  url: string;
-  payload: T;
-  auth: {
-    strategy: string;
-    credentials: {
-      user: object;
-      scope: string[];
-    };
-  };
-}
-
 export const insertDummyPermission = async function insertDummyPermission(
   model: PermissionModel,
   props?: PermissionAttributes
@@ -105,23 +92,4 @@ export const insertDummyProduct = async function insertDummyProduct(
     ...props
   });
   return doc;
-};
-
-export const getRequestObject = function getRequestObject<T>(
-  props: ServerInjectObject<T>
-) {
-  return function (overrides?: ServerInjectObject<T>): ServerInjectObject<T> {
-    return {
-      ...props,
-      ...overrides,
-      auth: {
-        ...props.auth,
-        ...overrides?.auth,
-        credentials: {
-          ...props.auth.credentials,
-          ...overrides?.auth?.credentials
-        }
-      }
-    };
-  };
 };

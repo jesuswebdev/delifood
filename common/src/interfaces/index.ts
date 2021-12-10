@@ -12,8 +12,8 @@ export * from './queue-channels';
 
 export interface UserCredentials {
   id: string;
-  permissions: string[];
-  roles: string[];
+  permissions?: string[];
+  roles?: string[];
 }
 export interface AuthToken {
   user: UserCredentials;
