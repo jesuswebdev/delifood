@@ -1,9 +1,12 @@
 import { Document, Model, LeanDocument, Types } from 'mongoose';
-import { LeanUserDocument, LeanProductDocument } from './index';
+import {
+  LeanUserDocument,
+  CartItemAttributes
+} from './index';
 
 export interface CartAttributes {
   user: Types.ObjectId | LeanUserDocument;
-  items: Types.ObjectId[] | LeanProductDocument[];
+  items: CartItemAttributes[];
 }
 
 export interface CartDocument extends Document, CartAttributes {}
