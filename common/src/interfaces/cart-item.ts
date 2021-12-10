@@ -2,7 +2,7 @@ import { Document, Model, LeanDocument, Types } from 'mongoose';
 import { LeanProductDocument } from './index';
 
 export interface CartItemAttributes {
-  product: Types.ObjectId | LeanProductDocument;
+  product: string | Types.ObjectId | LeanProductDocument;
   quantity: number;
 }
 
