@@ -41,6 +41,7 @@ const tokenAuthStrategy = {
               }
             });
           } catch (error) {
+            console.error(error);
             return Boom.unauthorized();
           }
         }
