@@ -1,15 +1,9 @@
-import {
-  Document,
-  Model,
-  LeanDocument,
-  SchemaDefinitionProperty,
-  Types
-} from 'mongoose';
+import { Document, Model, LeanDocument, Types } from 'mongoose';
 import { LeanUserDocument, LeanProductDocument } from './index';
 
 export interface CartAttributes {
-  user: SchemaDefinitionProperty<Types.ObjectId> | LeanUserDocument;
-  items: SchemaDefinitionProperty<Types.ObjectId>[] | LeanProductDocument[];
+  user: Types.ObjectId | LeanUserDocument;
+  items: Types.ObjectId[] | LeanProductDocument[];
 }
 
 export interface CartDocument extends Document, CartAttributes {}

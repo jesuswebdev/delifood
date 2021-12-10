@@ -1,10 +1,4 @@
-import {
-  Document,
-  Model,
-  LeanDocument,
-  SchemaDefinitionProperty,
-  Types
-} from 'mongoose';
+import { Document, Model, LeanDocument, Types } from 'mongoose';
 import { LeanTagDocument, LeanCategoryDocument } from './index';
 
 export interface ProductAttributes {
@@ -17,14 +11,8 @@ export interface ProductAttributes {
   rating?: number;
   orders?: number;
   discount?: number;
-  categories?:
-    | SchemaDefinitionProperty<Types.ObjectId>[]
-    | LeanCategoryDocument[]
-    | string[];
-  tags?:
-    | SchemaDefinitionProperty<Types.ObjectId>[]
-    | LeanTagDocument[]
-    | string[];
+  categories?: Types.ObjectId[] | LeanCategoryDocument[] | string[];
+  tags?: Types.ObjectId[] | LeanTagDocument[] | string[];
 }
 
 export interface ProductDocument extends Document, ProductAttributes {}

@@ -1,17 +1,11 @@
-import {
-  Document,
-  LeanDocument,
-  Model,
-  Types,
-  SchemaDefinitionProperty
-} from 'mongoose';
+import { Document, LeanDocument, Model, Types } from 'mongoose';
 import { LeanRoleDocument } from './index';
 
 export interface UserAttributes {
   email: string;
   password?: string;
   enabled: boolean;
-  roles: SchemaDefinitionProperty<Types.ObjectId>[] | LeanRoleDocument[];
+  roles: Types.ObjectId[] | LeanRoleDocument[];
 }
 
 export interface UserDocument extends Document, UserAttributes {}

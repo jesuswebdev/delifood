@@ -1,18 +1,10 @@
-import {
-  Document,
-  LeanDocument,
-  Model,
-  Types,
-  SchemaDefinitionProperty
-} from 'mongoose';
+import { Document, LeanDocument, Model, Types } from 'mongoose';
 import { LeanPermissionDocument } from './index';
 
 export interface RoleAttributes {
   name: string;
   description?: string;
-  permissions:
-    | SchemaDefinitionProperty<Types.ObjectId>[]
-    | LeanPermissionDocument[];
+  permissions: Types.ObjectId[] | LeanPermissionDocument[];
 }
 
 export interface RoleDocument extends Document, RoleAttributes {}
