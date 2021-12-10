@@ -3,7 +3,7 @@
 import { Server, Request, ResponseToolkit } from '@hapi/hapi';
 import Boom from '@hapi/boom';
 import Iron from '@hapi/iron';
-import { AUTH_STRATEGY } from '../../index';
+import { AUTH_STRATEGY, AuthToken } from '../../index';
 
 interface AuthStrategyOptions {
   ironSecret: string;
@@ -16,7 +16,6 @@ const tokenAuthStrategy = {
       return {
         authenticate: async (request: Request, h: ResponseToolkit) => {
           let token: string | null = null;
-          let payload = null;
           const auth = request.raw.req.headers.authorization;
 
           if (!auth || !/^Bearer /.test(auth)) {
@@ -25,18 +24,25 @@ const tokenAuthStrategy = {
 
           try {
             token = auth.slice(7);
-            payload = await Iron.unseal(
+            const payload: AuthToken = await Iron.unseal(
               token,
               options.ironSecret,
               Iron.defaults
             );
+
+            if (Date.now() > payload.expiresAt) {
+              return h.unauthenticated(new Error('Token expired'));
+            }
+
+            return h.authenticated({
+              credentials: {
+                user: payload.user,
+                scope: payload.user.permissions
+              }
+            });
           } catch (error) {
             return Boom.unauthorized();
           }
-
-          return h.authenticated({
-            credentials: { scope: [].concat(payload.sub) }
-          });
         }
       };
     };
