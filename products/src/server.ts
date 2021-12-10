@@ -2,7 +2,8 @@ import Hapi, { Server } from '@hapi/hapi';
 import {
   tokenAuthStrategy,
   MongoosePlugin,
-  RabbitMQPlugin
+  RabbitMQPlugin,
+  UserCredentials as HapiUserCredentials
 } from '@delifood/common';
 import { PORT, MONGODB_URI, IRON_SECRET } from './config/index';
 import { mongoosePlugin } from './plugins/mongoose';
@@ -17,6 +18,8 @@ declare module '@hapi/hapi' {
     mongoose: MongoosePlugin;
     rabbitmq: RabbitMQPlugin;
   }
+  // eslint-disable-next-line
+  export interface UserCredentials extends HapiUserCredentials {}
 }
 
 let server: Server;
