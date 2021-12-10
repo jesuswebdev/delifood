@@ -15,7 +15,8 @@ import {
   ProductAttributes,
   ProductModel,
   CategoryModel,
-  assertNonDuplicateIds
+  assertNonDuplicateIds,
+  QUEUE_CHANNELS
 } from '@delifood/common';
 
 export async function createProduct(
@@ -23,6 +24,7 @@ export async function createProduct(
   h: ResponseToolkit
 ): Promise<ResponseObject | ResponseValue> {
   try {
+    const publish = request.server.plugins.nats.publish;
     const payload = request.payload as ProductAttributes;
     const productModel = getModel<ProductModel>(
       request.server.plugins,
@@ -72,6 +74,9 @@ export async function createProduct(
     }
 
     const saved = await productModel.create(payload);
+
+    publish(QUEUE_CHANNELS.PRODUCT_CREATED, saved);
+
     return h.response(saved).code(201);
   } catch (error: unknown) {
     if ((error as MongoError)?.code === 11000) {
