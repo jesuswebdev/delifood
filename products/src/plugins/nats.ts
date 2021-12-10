@@ -23,6 +23,7 @@ const natsPlugin = {
     };
 
     server.expose('publish', publish);
+    console.log('Connection to NATS server established');
   }
 };
 
