@@ -43,20 +43,19 @@ const natsPlugin = {
   async register(server: Server, options: PluginRegisterOptions) {
     const connection = await connect({ servers: [options.uri] });
 
-    await Promise.all([
-      startConsumer<UserModel, UserAttributes>({
-        server,
-        connection,
-        channel: QUEUE_CHANNELS.USER_CREATED,
-        model: 'User'
-      }),
-      startConsumer<ProductModel, ProductAttributes>({
-        server,
-        connection,
-        channel: QUEUE_CHANNELS.PRODUCT_CREATED,
-        model: 'Product'
-      })
-    ]);
+    startConsumer<UserModel, UserAttributes>({
+      server,
+      connection,
+      channel: QUEUE_CHANNELS.USER_CREATED,
+      model: 'User'
+    });
+
+    startConsumer<ProductModel, ProductAttributes>({
+      server,
+      connection,
+      channel: QUEUE_CHANNELS.PRODUCT_CREATED,
+      model: 'Product'
+    });
 
     if (process.env.NODE_ENV !== 'test') {
       console.log('Connection to NATS server established');
