@@ -5,8 +5,9 @@
   "main": "./lib/index.js",
   "scripts": {
     "mongo:seed": "ts-node ./src/utils/seed.ts",
-    "docker:run": "docker run --name delifood/auth -d --env-file=./.env delifood/auth",
-    "docker:build": "tsc && docker build -t delifood/auth .",
+    "docker:push":"docker push jesuswebdev/delifood-auth",
+    "docker:run": "docker run --name delifood-auth -d --env-file=./.env jesuswebdev/delifood-auth",
+    "docker:build": "tsc && docker build -t jesuswebdev/delifood-auth .",
     "build": "tsc",
     "start": "node ./lib/index.js",
     "dev": "ts-node ./src/index.ts",

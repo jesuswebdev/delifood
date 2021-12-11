@@ -1,10 +1,10 @@
-FROM node:alpine
-
+FROM node:17-alpine as deps
 WORKDIR /usr/app
 COPY ./package*.json ./
-RUN npm install --only=production
-COPY ./ ./
-ENV NODE_ENV production
-EXPOSE 8080
+RUN npm ci --only=production
+
+FROM node:17-alpine 
+COPY --from=deps ./usr/app/ ./
+COPY ./lib/ ./lib/
 
 CMD [ "npm", "start" ]
