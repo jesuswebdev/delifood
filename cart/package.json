@@ -4,6 +4,7 @@
   "description": "",
   "main": "./lib/index.js",
   "scripts": {
+    "docker:run": "docker run --name delifood/cart -d --env-file=./.env delifood/cart",
     "docker:build": "tsc && docker build -t delifood/cart .",
     "build": "tsc",
     "start": "node ./lib/index.js",

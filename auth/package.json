@@ -4,6 +4,8 @@
   "description": "",
   "main": "./lib/index.js",
   "scripts": {
+    "mongo:seed": "ts-node ./src/utils/seed.ts",
+    "docker:run": "docker run --name delifood/auth -d --env-file=./.env delifood/auth",
     "docker:build": "tsc && docker build -t delifood/auth .",
     "build": "tsc",
     "start": "node ./lib/index.js",

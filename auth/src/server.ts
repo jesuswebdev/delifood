@@ -5,7 +5,7 @@ import {
   NATSPlugin,
   UserCredentials as HapiUserCredentials
 } from '@delifood/common';
-import { PORT, MONGODB_URI, IRON_SECRET, NATS_URI } from './config/index';
+import { HOST, PORT, MONGODB_URI, IRON_SECRET, NATS_URI } from './config/index';
 import { mongoosePlugin } from './plugins/mongoose';
 import { natsPlugin } from './plugins/nats';
 import { authRoutesPlugin } from './plugins/user-auth-routes';
@@ -32,7 +32,7 @@ interface InitServerConfig {
 
 export const init = async function init(config?: InitServerConfig) {
   server = Hapi.server({
-    host: 'localhost',
+    host: HOST,
     port: PORT,
     routes: { cors: true }
   });

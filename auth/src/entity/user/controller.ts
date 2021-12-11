@@ -40,7 +40,7 @@ export async function createUser(
     const saved = await userModel.create(payload);
     const sanitized = saved.toJSON();
     sanitized.password = undefined;
-    publish(QUEUE_CHANNELS.USER_CREATED, sanitized);
+    publish(QUEUE_CHANNELS.USER_CREATED, saved);
     return h.response(sanitized).code(201);
   } catch (error: unknown) {
     if ((error as MongoError)?.code === 11000) {
