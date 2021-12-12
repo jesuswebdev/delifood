@@ -6,13 +6,13 @@ import * as controller from './controller';
 const ROUTES_VALIDATION = {
   payload: {
     name: Joi.string().trim().min(4),
-    description: Joi.string().trim().min(4),
+    description: Joi.string().trim().min(4)
   },
   params: { id: Joi.string().hex().length(24).exist() },
   query: {}
 };
 
-export default {
+const categoryRoutes = {
   name: 'category routes',
   version: '1.0.0',
   register: async function (server: Server) {
@@ -83,3 +83,5 @@ export default {
     });
   }
 };
+
+export { categoryRoutes };

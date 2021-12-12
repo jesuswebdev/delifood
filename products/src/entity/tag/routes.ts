@@ -15,7 +15,7 @@ const ROUTES_VALIDATION = {
   query: {}
 };
 
-export default {
+const tagRoutes = {
   name: 'tag routes',
   version: '1.0.0',
   async register(server: Server) {
@@ -55,3 +55,5 @@ export default {
     });
   }
 };
+
+export { tagRoutes };

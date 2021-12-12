@@ -8,9 +8,9 @@ import {
 import { PORT, MONGODB_URI, IRON_SECRET, NATS_URI } from './config/index';
 import { mongoosePlugin } from './plugins/mongoose';
 import { natsPlugin } from './plugins/nats';
-import tagsRoutes from './entity/tag/routes';
-import categoriesRoutes from './entity/category/routes';
-import productRoutes from './entity/product/routes';
+import { tagRoutes } from './entity/tag/routes';
+import { categoryRoutes } from './entity/category/routes';
+import { productRoutes } from './entity/product/routes';
 
 declare module '@hapi/hapi' {
   export interface PluginProperties {
@@ -39,12 +39,12 @@ export const init = async function init(config?: InitServerConfig) {
     },
     { plugin: natsPlugin, options: { uri: NATS_URI } },
     { plugin: tokenAuthStrategy, options: { ironSecret: IRON_SECRET } },
-    { plugin: tagsRoutes, routes: { prefix: '/api/products/tags' } },
+    { plugin: tagRoutes, routes: { prefix: '/api/products/tags' } },
     {
-      plugin: categoriesRoutes,
+      plugin: categoryRoutes,
       routes: { prefix: '/api/products/categories' }
     },
-    { plugin: productRoutes, routes: { prefix: '/api/products' } }
+    { plugin: productRoutes, routes: { prefix: '/api/products/' } }
   ]);
 
   server.route({
