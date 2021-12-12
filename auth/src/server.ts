@@ -52,7 +52,7 @@ export const init = async function init(config?: InitServerConfig) {
 
   server.route({
     method: 'GET',
-    path: '/health',
+    path: '/api/auth/health',
     options: { auth: false },
     async handler(request: Request, h: ResponseToolkit) {
       const mongoose = request.server.plugins.mongoose.connection;
