@@ -44,7 +44,7 @@ export const init = async function init(config?: InitServerConfig) {
       plugin: categoryRoutes,
       routes: { prefix: '/api/products/categories' }
     },
-    { plugin: productRoutes, routes: { prefix: '/api/products/' } }
+    { plugin: productRoutes, routes: { prefix: '/api/products' } }
   ]);
 
   server.route({
