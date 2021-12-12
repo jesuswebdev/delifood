@@ -44,10 +44,14 @@ export const init = async function init(config?: InitServerConfig) {
     },
     { plugin: natsPlugin, options: { uri: NATS_URI } },
     { plugin: tokenAuthStrategy, options: { ironSecret: IRON_SECRET } },
-    { plugin: permissionRoutes, routes: { prefix: '/permissions' } },
-    { plugin: roleRoutes, routes: { prefix: '/roles' } },
-    { plugin: userRoutes, routes: { prefix: '/users' } },
-    { plugin: authRoutesPlugin, options: { ironSecret: IRON_SECRET } }
+    { plugin: permissionRoutes, routes: { prefix: '/api/auth/permissions' } },
+    { plugin: roleRoutes, routes: { prefix: '/api/auth/roles' } },
+    { plugin: userRoutes, routes: { prefix: '/api/auth/users' } },
+    {
+      plugin: authRoutesPlugin,
+      options: { ironSecret: IRON_SECRET },
+      routes: { prefix: '/api/auth' }
+    }
   ]);
 
   server.route({
