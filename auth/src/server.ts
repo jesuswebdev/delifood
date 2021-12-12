@@ -13,6 +13,11 @@ import { permissionRoutes } from './entity/permission/routes';
 import { roleRoutes } from './entity/role/routes';
 import { userRoutes } from './entity/user/routes';
 
+console.log('======ENV VARIABLES=====');
+console.log('PORT', PORT);
+console.log('MONGODB_URI', MONGODB_URI);
+console.log('NATS_URI', NATS_URI);
+console.log('IRON_SECRET', IRON_SECRET);
 declare module '@hapi/hapi' {
   export interface PluginProperties {
     // eslint-disable-next-line
