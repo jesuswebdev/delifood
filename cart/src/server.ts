@@ -26,7 +26,7 @@ interface InitServerConfig {
 }
 
 export const init = async function init(config?: InitServerConfig) {
-  server = Hapi.server({ host: HOST, port: PORT, routes: { cors: true } });
+  server = Hapi.server({ host: '0.0.0.0', port: PORT, routes: { cors: true } });
 
   await server.register([
     {

@@ -30,7 +30,7 @@ interface InitServerConfig {
 }
 
 export const init = async function init(config?: InitServerConfig) {
-  server = Hapi.server({ host: HOST, port: PORT, routes: { cors: true } });
+  server = Hapi.server({ host: '0.0.0.0', port: PORT, routes: { cors: true } });
 
   await server.register([
     {
@@ -40,7 +40,10 @@ export const init = async function init(config?: InitServerConfig) {
     { plugin: natsPlugin, options: { uri: NATS_URI } },
     { plugin: tokenAuthStrategy, options: { ironSecret: IRON_SECRET } },
     { plugin: tagsRoutes, routes: { prefix: '/api/products/tags' } },
-    { plugin: categoriesRoutes, routes: { prefix: '/api/products/categories' } },
+    {
+      plugin: categoriesRoutes,
+      routes: { prefix: '/api/products/categories' }
+    },
     { plugin: productRoutes, routes: { prefix: '/api/products' } }
   ]);
 
