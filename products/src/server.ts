@@ -39,9 +39,9 @@ export const init = async function init(config?: InitServerConfig) {
     },
     { plugin: natsPlugin, options: { uri: NATS_URI } },
     { plugin: tokenAuthStrategy, options: { ironSecret: IRON_SECRET } },
-    { plugin: tagsRoutes, routes: { prefix: '/tags' } },
-    { plugin: categoriesRoutes, routes: { prefix: '/categories' } },
-    { plugin: productRoutes, routes: { prefix: '/products' } }
+    { plugin: tagsRoutes, routes: { prefix: '/api/products/tags' } },
+    { plugin: categoriesRoutes, routes: { prefix: '/api/products/categories' } },
+    { plugin: productRoutes, routes: { prefix: '/api/products' } }
   ]);
 
   return server;

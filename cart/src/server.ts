@@ -35,7 +35,7 @@ export const init = async function init(config?: InitServerConfig) {
     },
     { plugin: natsPlugin, options: { uri: NATS_URI } },
     { plugin: tokenAuthStrategy, options: { ironSecret: IRON_SECRET } },
-    { plugin: cartRoutes, routes: { prefix: '/cart' } }
+    { plugin: cartRoutes, routes: { prefix: '/api/cart' } }
   ]);
 
   return server;
