@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  cart
+  namespace: default
+  labels:
+    app:  cart
+spec:
+  selector:
+    matchLabels:
+      app: cart
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app:  cart
+    spec:
+      containers:
+      - name:  cart
+        image:  jesuswebdev/delifood-cart
+        env:
+        - name: IRON_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: iron-secret
+              key: value     
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart
+  namespace: default
+spec:
+  selector:
+    app: cart
+  type: ClusterIP
+  ports:
+  - name: cart
+    protocol: TCP
+    port: 8080
+    targetPort: 8080

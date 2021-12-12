@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  products
+  namespace: default
+  labels:
+    app:  products
+spec:
+  selector:
+    matchLabels:
+      app: products
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app:  products
+    spec:
+      containers:
+      - name:  products
+        image:  jesuswebdev/delifood-products
+        env:
+        - name: IRON_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: iron-secret
+              key: value     
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: products
+  namespace: default
+spec:
+  selector:
+    app: products
+  type: ClusterIP
+  ports:
+  - name: products
+    protocol: TCP
+    port: 8080
+    targetPort: 8080

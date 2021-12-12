@@ -18,4 +18,18 @@ spec:
                 name: auth
                 port:
                   number: 8080
+          - path: /api/products/
+            pathType: Prefix
+            backend:
+              service:
+                name: products
+                port:
+                  number: 8080
+          - path: /api/cart/
+            pathType: Prefix
+            backend:
+              service:
+                name: cart
+                port:
+                  number: 8080
   ingressClassName: nginx
