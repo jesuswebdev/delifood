@@ -3,7 +3,8 @@ WORKDIR /usr/app
 COPY ./package*.json ./
 RUN npm ci --only=production
 
-FROM node:17-alpine 
+FROM node:17-alpine
+WORKDIR /usr/app
 COPY --from=deps ./usr/app/ ./
 COPY ./lib/ ./lib/
 
