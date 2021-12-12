@@ -1,0 +1,21 @@
+# https://kubernetes.io/docs/concepts/services-networking/ingress/#the-ingress-resource
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-service
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: 'true'
+spec:
+  rules:
+    - host: delifood.dev
+      http:
+        paths:
+          - path: /api/auth/
+            pathType: Prefix
+            backend:
+              service:
+                name: auth
+                port:
+                  number: 8080
+  ingressClassName: nginx
