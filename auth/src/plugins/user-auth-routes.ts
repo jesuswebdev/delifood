@@ -113,7 +113,7 @@ const authRoutesPlugin = {
             .lean();
 
           if (!foundUser) {
-            return Boom.notFound();
+            return Boom.notFound('User does not exist.');
           }
 
           const passwordsMatch = await Password.compare(
