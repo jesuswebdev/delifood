@@ -11,21 +11,21 @@ spec:
     - host: delifood.dev
       http:
         paths:
-          - path: /api/auth/
+          - path: /api/auth
             pathType: Prefix
             backend:
               service:
                 name: auth
                 port:
                   number: 8080
-          - path: /api/products/
+          - path: /api/products
             pathType: Prefix
             backend:
               service:
                 name: products
                 port:
                   number: 8080
-          - path: /api/cart/
+          - path: /api/cart
             pathType: Prefix
             backend:
               service:
