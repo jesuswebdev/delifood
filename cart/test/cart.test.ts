@@ -31,7 +31,7 @@ const cleanUp = async function cleanUp(server: Server) {
   ]);
 };
 
-describe('Test Cart Routes', async () => {
+describe('Test Cart Routes', () => {
   let server: Server;
   let mongod: MongoMemoryServer;
 
@@ -65,7 +65,7 @@ describe('Test Cart Routes', async () => {
 
       request = {
         method: 'POST',
-        url: '/cart/item',
+        url: '/api/cart/item',
         payload: {
           product: product.id,
           quantity: 3
@@ -201,10 +201,10 @@ describe('Test Cart Routes', async () => {
       await cleanUp(server);
     });
 
-    beforeEach(async () => {
+    beforeEach(() => {
       request = {
         method: 'GET',
-        url: '/cart',
+        url: '/api/cart',
         auth: cloneObject({
           ...defaultAuthObject,
           credentials: { user: { id: user._id }, scope: ['get:cart'] }
@@ -270,7 +270,7 @@ describe('Test Cart Routes', async () => {
 
       request = {
         method: 'PATCH',
-        url: '/cart/item/' + product.id,
+        url: '/api/cart/item/' + product.id,
         payload: {
           quantity: 5
         },
@@ -325,7 +325,7 @@ describe('Test Cart Routes', async () => {
     });
 
     it('should fail when the product does not exist', async () => {
-      request.url = '/cart/item/61b3a085830262ca83ce091d';
+      request.url = '/api/cart/item/61b3a085830262ca83ce091d';
       const response = await server.inject(request);
       expect(response.statusCode).to.eq(404);
     });
@@ -387,7 +387,7 @@ describe('Test Cart Routes', async () => {
 
       request = {
         method: 'DELETE',
-        url: '/cart/item/' + product.id,
+        url: '/api/cart/item/' + product.id,
         auth: cloneObject({
           ...defaultAuthObject,
           credentials: {
@@ -432,13 +432,13 @@ describe('Test Cart Routes', async () => {
     });
 
     it('should fail when the product does not exist', async () => {
-      request.url = '/cart/item/61b3a085830262ca83ce091d';
+      request.url = '/api/cart/item/61b3a085830262ca83ce091d';
       const response = await server.inject(request);
       expect(response.statusCode).to.eq(404);
     });
 
     it('should fail when the product id does not match the required length', async () => {
-      request.url = '/cart/item/61b3a085830262ca83ce091';
+      request.url = '/api/cart/item/61b3a085830262ca83ce091';
       const response = await server.inject(request);
       expect(response.statusCode).to.eq(400);
     });
