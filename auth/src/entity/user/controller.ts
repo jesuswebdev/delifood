@@ -20,12 +20,15 @@ import {
 
 const assertRolesIds = function assertRolesIds(roles: string[]): boolean {
   const aux: { [key: string]: number } = {};
+
   for (const r of roles) {
     if (aux[r]) {
       return false;
     }
+
     aux[r] = 1;
   }
+
   return true;
 };
 
@@ -41,11 +44,13 @@ export async function createUser(
     const sanitized = saved.toJSON();
     sanitized.password = undefined;
     publish(QUEUE_CHANNELS.USER_CREATED, saved);
+
     return h.response(sanitized).code(201);
   } catch (error: unknown) {
     if ((error as MongoError)?.code === 11000) {
       return Boom.conflict();
     }
+
     return Boom.internal();
   }
 }
@@ -61,10 +66,15 @@ export async function getUser(
       path: 'roles',
       populate: { path: 'permissions' }
     });
-    if (!user) return Boom.notFound();
+
+    if (!user) {
+      return Boom.notFound();
+    }
+
     return h.response(user);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -76,9 +86,11 @@ export async function listUsers(
   try {
     const userModel = getModel<UserModel>(request.server.plugins, 'User');
     const users = await userModel.find();
+
     return h.response(users);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -91,16 +103,20 @@ export async function patchUser(
     const id: string = request.params.id;
     const payload = request.payload as UserAttributes;
     const userModel = getModel<UserModel>(request.server.plugins, 'User');
-
     const result = await userModel.findByIdAndUpdate(castToObjectId(id), {
       $set: payload
     });
-    if (!result) return Boom.notFound();
+
+    if (!result) {
+      return Boom.notFound();
+    }
+
     return h.response().code(204);
   } catch (error: unknown) {
     if ((error as MongoError)?.code === 11000) {
       return Boom.conflict();
     }
+
     return Boom.internal();
   }
 }
@@ -113,10 +129,15 @@ export async function deleteUser(
     const id: string = request.params.id;
     const userModel = getModel<UserModel>(request.server.plugins, 'User');
     const result = await userModel.findByIdAndDelete(castToObjectId(id));
-    if (!result) return Boom.notFound();
+
+    if (!result) {
+      return Boom.notFound();
+    }
+
     return h.response().code(204);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -137,24 +158,25 @@ export async function putUserRoles(
 
     let user = await userModel.findById(castToObjectId(userId));
 
-    if (user) {
-      const roles = await roleModel.find({
-        _id: { $in: rolesIds.map(castToObjectId) }
-      });
-
-      if (roles.length !== rolesIds.length) {
-        return Boom.badData('One of the roles does not exist.');
-      }
-
-      user = await userModel.findByIdAndUpdate(
-        user._id,
-        { $set: { roles } },
-        { new: true }
-      );
-      return h.response(user as LeanUserDocument);
-    } else {
+    if (!user) {
       return Boom.notFound();
     }
+
+    const roles = await roleModel.find({
+      _id: { $in: rolesIds.map(castToObjectId) }
+    });
+
+    if (roles.length !== rolesIds.length) {
+      return Boom.badData('One of the roles does not exist.');
+    }
+
+    user = await userModel.findByIdAndUpdate(
+      user._id,
+      { $set: { roles } },
+      { new: true }
+    );
+
+    return h.response(user as LeanUserDocument);
   } catch (error) {
     return Boom.internal();
   }

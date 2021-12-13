@@ -13,6 +13,7 @@ const natsPlugin = {
     if (process.env.NODE_ENV === 'test') {
       //eslint-disable-next-line
       server.expose('publish', () => {});
+
       return;
     }
 

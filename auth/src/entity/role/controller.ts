@@ -20,12 +20,14 @@ const assertPermissionIds = function assertPermissionIds(
   permissions: string[]
 ): boolean {
   const aux: { [key: string]: number } = {};
+
   for (const p of permissions) {
     if (aux[p]) {
       return false;
     }
     aux[p] = 1;
   }
+
   return true;
 };
 
@@ -36,14 +38,14 @@ export async function createRole(
   try {
     const payload = request.payload as RoleAttributes;
     const RoleModel = getModel<RoleModel>(request.server.plugins, 'Role');
-
     const saved = await RoleModel.create(payload);
+
     return h.response(saved).code(201);
-    // eslint-disable-next-line
   } catch (error: unknown) {
     if ((error as MongoError)?.code === 11000) {
       return Boom.conflict();
     }
+
     return Boom.internal();
   }
 }
@@ -58,10 +60,15 @@ export async function getRole(
     const role = await RoleModel.findById(castToObjectId(id)).populate({
       path: 'permissions'
     });
-    if (!role) return Boom.notFound();
+
+    if (!role) {
+      return Boom.notFound();
+    }
+
     return h.response(role);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -73,9 +80,11 @@ export async function listRoles(
   try {
     const RoleModel = getModel<RoleModel>(request.server.plugins, 'Role');
     const roles = await RoleModel.find();
+
     return h.response(roles);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -88,17 +97,20 @@ export async function patchRole(
     const id: string = request.params.id;
     const payload = request.payload as RoleAttributes;
     const RoleModel = getModel<RoleModel>(request.server.plugins, 'Role');
-
     const result = await RoleModel.findByIdAndUpdate(castToObjectId(id), {
       $set: payload
     });
-    if (!result) return Boom.notFound();
+
+    if (!result) {
+      return Boom.notFound();
+    }
+
     return h.response().code(204);
-    // eslint-disable-next-line
   } catch (error: unknown) {
     if ((error as MongoError)?.code === 11000) {
       return Boom.conflict();
     }
+
     return Boom.internal();
   }
 }
@@ -111,10 +123,15 @@ export async function deleteRole(
     const id: string = request.params.id;
     const RoleModel = getModel<RoleModel>(request.server.plugins, 'Role');
     const result = await RoleModel.findByIdAndDelete(castToObjectId(id));
-    if (!result) return Boom.notFound();
+
+    if (!result) {
+      return Boom.notFound();
+    }
+
     return h.response().code(204);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -152,9 +169,11 @@ export async function putRolePermissions(
     } else {
       return Boom.notFound();
     }
+
     return h.response(role);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }

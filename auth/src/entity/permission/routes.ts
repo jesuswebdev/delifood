@@ -28,7 +28,7 @@ const ROUTES_VALIDATION = {
 const permissionRoutes = {
   name: 'permission routes',
   version: '1.0.0',
-  async register(server: Server) {
+  register(server: Server) {
     server.route({
       method: 'POST',
       path: '/',

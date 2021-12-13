@@ -79,9 +79,11 @@ const authRoutesPlugin = {
           return h.response().code(201);
         } catch (error: unknown) {
           console.error(error);
+
           if ((error as MongoError)?.code === 11000) {
             return Boom.conflict();
           }
+
           return Boom.internal();
         }
       }
@@ -153,6 +155,7 @@ const authRoutesPlugin = {
           return h.response({ user: userProps, token });
         } catch (error: unknown) {
           console.error(error);
+
           return Boom.internal();
         }
       }

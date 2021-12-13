@@ -26,12 +26,15 @@ export async function createPermission(
       'Permission'
     );
     const saved = await permissionModel.create(payload);
+
     return h.response(saved).code(201);
   } catch (error: unknown) {
     console.error(error);
+
     if ((error as MongoError).code === 11000) {
       return Boom.conflict();
     }
+
     return Boom.internal();
   }
 }
@@ -47,10 +50,15 @@ export async function getPermission(
       'Permission'
     );
     const permission = await permissionModel.findById(castToObjectId(id));
-    if (!permission) return Boom.notFound();
+
+    if (!permission) {
+      return Boom.notFound();
+    }
+
     return h.response(permission);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -65,9 +73,11 @@ export async function listPermissions(
       'Permission'
     );
     const permissions = await permissionModel.find();
+
     return h.response(permissions);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -96,6 +106,7 @@ export async function patchPermission(
     if ((error as MongoError).code === 11000) {
       return Boom.conflict();
     }
+
     return Boom.internal();
   }
 }
@@ -119,6 +130,7 @@ export async function deletePermission(
     return h.response().code(204);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
