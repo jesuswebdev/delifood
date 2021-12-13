@@ -30,7 +30,7 @@ const cleanUp = async function cleanUp(server: Server) {
   ]);
 };
 
-describe('Test User Routes', async () => {
+describe('Test User Routes', () => {
   let server: Server;
   let mongod: MongoMemoryServer;
 
@@ -55,7 +55,7 @@ describe('Test User Routes', async () => {
       await cleanUp(server);
       request = {
         method: 'POST',
-        url: '/signup',
+        url: '/api/auth/signup',
         payload: {
           email: 'test@test.com',
           password: 'password1234'
@@ -121,7 +121,7 @@ describe('Test User Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'POST',
-        url: '/signin',
+        url: '/api/auth/signin',
         payload: cloneObject({ ...defaultPayloadObject })
       };
       done();

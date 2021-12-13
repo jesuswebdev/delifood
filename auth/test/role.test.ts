@@ -30,7 +30,7 @@ const cleanUp = async function cleanUp(server: Server) {
   ]);
 };
 
-describe('Test Role Routes', async () => {
+describe('Test Role Routes', () => {
   let server: Server;
   let mongod: MongoMemoryServer;
 
@@ -60,7 +60,7 @@ describe('Test Role Routes', async () => {
 
       request = {
         method: 'POST',
-        url: '/roles',
+        url: '/api/auth/roles',
         payload: {
           name: 'New role',
           description: 'a description'
@@ -152,7 +152,7 @@ describe('Test Role Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'GET',
-        url: '/roles/' + role._id,
+        url: '/api/auth/roles/' + role._id,
         auth: cloneObject(defaultAuthObject)
       };
       done();
@@ -165,19 +165,19 @@ describe('Test Role Routes', async () => {
     });
 
     it('should fail when id is not a hex string', async () => {
-      request.url = '/roles/aaaaaaaaaaaaaaaaaaaaaaaz';
+      request.url = '/api/auth/roles/aaaaaaaaaaaaaaaaaaaaaaaz';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when id is not present', async () => {
-      request.url = '/roles/';
+      request.url = '/api/auth/roles/';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
 
     it('should return 404 when role does not exist', async () => {
-      request.url = '/roles/aaaaaaaaaaaaaaaaaaaaaaa1';
+      request.url = '/api/auth/roles/aaaaaaaaaaaaaaaaaaaaaaa1';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
@@ -230,7 +230,7 @@ describe('Test Role Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'GET',
-        url: '/roles',
+        url: '/api/auth/roles',
         auth: cloneObject(defaultAuthObject)
       };
       done();
@@ -289,7 +289,7 @@ describe('Test Role Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'PATCH',
-        url: '/roles/' + role._id,
+        url: '/api/auth/roles/' + role._id,
         payload: {
           name: 'patched name',
           description: 'patched role test'
@@ -353,7 +353,7 @@ describe('Test Role Routes', async () => {
     });
 
     it('should fail with error 404 when role does not exist / no rows affected by update query', async () => {
-      request.url = '/roles/abababababababababababab';
+      request.url = '/api/auth/roles/abababababababababababab';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
@@ -376,7 +376,7 @@ describe('Test Role Routes', async () => {
       role = await insertDummyRole(getModel(server.plugins, 'Role'));
       request = {
         method: 'DELETE',
-        url: '/roles/' + role._id,
+        url: '/api/auth/roles/' + role._id,
         auth: cloneObject({ ...defaultAuthObject })
       };
     });
@@ -402,7 +402,7 @@ describe('Test Role Routes', async () => {
     });
 
     it('should fail with error 404 when role does not exist / no rows affected by update query', async () => {
-      request.url = '/roles/abababababababababababab';
+      request.url = '/api/auth/roles/abababababababababababab';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
@@ -425,7 +425,7 @@ describe('Test Role Routes', async () => {
       role = await insertDummyRole(getModel(server.plugins, 'Role'));
       request = {
         method: 'PUT',
-        url: `/roles/${role._id}/permissions`,
+        url: `/api/auth/roles/${role._id}/permissions`,
         auth: cloneObject({ ...defaultAuthObject })
       };
     });

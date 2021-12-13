@@ -23,7 +23,7 @@ const cleanUp = async function cleanUp(server: Server) {
   await Promise.allSettled([userModel.deleteMany(), roleModel.deleteMany()]);
 };
 
-describe('Test User Routes', async () => {
+describe('Test User Routes', () => {
   let server: Server;
   let mongod: MongoMemoryServer;
 
@@ -53,7 +53,7 @@ describe('Test User Routes', async () => {
 
       request = {
         method: 'POST',
-        url: '/users',
+        url: '/api/auth/users',
         payload: {
           email: 'test@test.com',
           password: 'password1234'
@@ -138,7 +138,7 @@ describe('Test User Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'GET',
-        url: '/users/' + user._id,
+        url: '/api/auth/users/' + user._id,
         auth: cloneObject(defaultAuthObject)
       };
       done();
@@ -151,19 +151,19 @@ describe('Test User Routes', async () => {
     });
 
     it('should fail when id is not a hex string', async () => {
-      request.url = '/users/aaaaaaaaaaaaaaaaaaaaaaaz';
+      request.url = '/api/auth/users/aaaaaaaaaaaaaaaaaaaaaaaz';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when id is not present', async () => {
-      request.url = '/users/';
+      request.url = '/api/auth/users/';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
 
     it('should return 404 when user does not exist', async () => {
-      request.url = '/users/aaaaaaaaaaaaaaaaaaaaaaa1';
+      request.url = '/api/auth/users/aaaaaaaaaaaaaaaaaaaaaaa1';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
@@ -216,7 +216,7 @@ describe('Test User Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'GET',
-        url: '/users',
+        url: '/api/auth/users',
         auth: cloneObject(defaultAuthObject)
       };
       done();
@@ -275,7 +275,7 @@ describe('Test User Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'PATCH',
-        url: '/users/' + user._id,
+        url: '/api/auth/users/' + user._id,
         payload: {
           email: 'newuser@test.com',
           password: 'qwerqwer1234'
@@ -340,7 +340,7 @@ describe('Test User Routes', async () => {
     });
 
     it('should fail with error 404 when user does not exist / no rows affected by update query', async () => {
-      request.url = '/users/abababababababababababab';
+      request.url = '/api/auth/users/abababababababababababab';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
@@ -363,7 +363,7 @@ describe('Test User Routes', async () => {
       user = await insertDummyUser(getModel(server.plugins, 'User'));
       request = {
         method: 'DELETE',
-        url: '/users/' + user._id,
+        url: '/api/auth/users/' + user._id,
         auth: cloneObject({ ...defaultAuthObject })
       };
     });
@@ -389,7 +389,7 @@ describe('Test User Routes', async () => {
     });
 
     it('should fail with error 404 when user does not exist / no rows affected by update query', async () => {
-      request.url = '/users/abababababababababababab';
+      request.url = '/api/auth/users/abababababababababababab';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
@@ -412,7 +412,7 @@ describe('Test User Routes', async () => {
       user = await insertDummyUser(getModel(server.plugins, 'User'));
       request = {
         method: 'PUT',
-        url: `/users/${user._id}/roles`,
+        url: `/api/auth/users/${user._id}/roles`,
         auth: cloneObject({ ...defaultAuthObject })
       };
     });

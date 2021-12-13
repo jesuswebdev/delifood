@@ -23,7 +23,7 @@ const cleanUp = async function cleanUp(server: Server) {
   await permissionModel.deleteMany();
 };
 
-describe('Test Permission Routes', async () => {
+describe('Test Permission Routes', () => {
   let server: Server;
   let mongod: MongoMemoryServer;
 
@@ -54,7 +54,7 @@ describe('Test Permission Routes', async () => {
       await cleanUp(server);
       request = {
         method: 'POST',
-        url: '/permissions',
+        url: '/api/auth/permissions',
         payload: {
           name: 'New Permission',
           value: 'create:permission',
@@ -164,7 +164,7 @@ describe('Test Permission Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'GET',
-        url: '/permissions/' + permission._id,
+        url: '/api/auth/permissions/' + permission._id,
         auth: cloneObject(defaultAuthObject)
       };
       done();
@@ -177,19 +177,19 @@ describe('Test Permission Routes', async () => {
     });
 
     it('should fail when id is not a hex string', async () => {
-      request.url = '/permissions/aaaaaaaaaaaaaaaaaaaaaaaz';
+      request.url = '/api/auth/permissions/aaaaaaaaaaaaaaaaaaaaaaaz';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when id is not present', async () => {
-      request.url = '/permissions/';
+      request.url = '/api/auth/permissions/';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
 
     it('should return 404 when permission does not exist', async () => {
-      request.url = '/permissions/aaaaaaaaaaaaaaaaaaaaaaa1';
+      request.url = '/api/auth/permissions/aaaaaaaaaaaaaaaaaaaaaaa1';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
@@ -242,7 +242,7 @@ describe('Test Permission Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'GET',
-        url: '/permissions',
+        url: '/api/auth/permissions',
         auth: cloneObject(defaultAuthObject)
       };
       done();
@@ -306,7 +306,7 @@ describe('Test Permission Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'PATCH',
-        url: '/permissions/' + permission._id,
+        url: '/api/auth/permissions/' + permission._id,
         payload: {
           name: 'patched name',
           value: 'create:role'
@@ -396,7 +396,7 @@ describe('Test Permission Routes', async () => {
     });
 
     it('should fail with error 404 when permission does not exist / no rows affected by update query', async () => {
-      request.url = '/permissions/abababababababababababab';
+      request.url = '/api/auth/permissions/abababababababababababab';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
@@ -421,7 +421,7 @@ describe('Test Permission Routes', async () => {
       );
       request = {
         method: 'DELETE',
-        url: '/permissions/' + permission._id,
+        url: '/api/auth/permissions/' + permission._id,
         auth: cloneObject({ ...defaultAuthObject })
       };
     });
@@ -447,7 +447,7 @@ describe('Test Permission Routes', async () => {
     });
 
     it('should fail with error 404 when permission does not exist / no rows affected by update query', async () => {
-      request.url = '/permissions/abababababababababababab';
+      request.url = '/api/auth/permissions/abababababababababababab';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
