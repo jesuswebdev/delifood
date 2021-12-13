@@ -41,6 +41,13 @@ const natsPlugin = {
   name: 'nats',
   version: '1.0.0',
   async register(server: Server, options: PluginRegisterOptions) {
+    if (process.env.NODE_ENV === 'test') {
+      //eslint-disable-next-line
+      server.expose('publish', () => {});
+
+      return;
+    }
+
     const connection = await connect({ servers: [options.uri] });
 
     startConsumer<UserModel, UserAttributes>({

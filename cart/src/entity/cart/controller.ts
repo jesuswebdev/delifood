@@ -99,9 +99,11 @@ export async function addItemToCart(
     return h.response(saved).code(200);
   } catch (error: unknown) {
     console.error(error);
+
     if ((error as MongoError)?.code === 11000) {
       return Boom.conflict();
     }
+
     return Boom.internal();
   }
 }
@@ -140,6 +142,7 @@ export async function getCart(
     return h.response({ items: cart.items });
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -214,6 +217,7 @@ export async function updateCartItem(
     if ((error as MongoError)?.code === 11000) {
       return Boom.conflict();
     }
+
     return Boom.internal();
   }
 }
@@ -279,6 +283,7 @@ export async function deleteCartItem(
     return h.response(saved).code(200);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }

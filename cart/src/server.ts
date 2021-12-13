@@ -42,8 +42,9 @@ export const init = async function init(config?: InitServerConfig) {
     method: 'GET',
     path: '/api/cart/health',
     options: { auth: false },
-    async handler(request: Request, h: ResponseToolkit) {
+    handler(request: Request, h: ResponseToolkit) {
       const mongoose = request.server.plugins.mongoose.connection;
+
       return h.response({ api: true, db: mongoose.readyState === 1 });
     }
   });
@@ -53,6 +54,7 @@ export const init = async function init(config?: InitServerConfig) {
 
 export const start = function start() {
   console.log('Listening on port', PORT);
+
   return server.start();
 };
 
