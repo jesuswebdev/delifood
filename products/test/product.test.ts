@@ -30,7 +30,7 @@ const cleanUp = async function cleanUp(server: Server) {
   ]);
 };
 
-describe('Test Product Routes', async () => {
+describe('Test Product Routes', () => {
   let server: Server;
   let mongod: MongoMemoryServer;
 
@@ -60,7 +60,7 @@ describe('Test Product Routes', async () => {
 
       request = {
         method: 'POST',
-        url: '/products',
+        url: '/api/products',
         payload: {
           name: 'New Product',
           description: 'a product description',
@@ -295,7 +295,7 @@ describe('Test Product Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'GET',
-        url: '/products/' + product._id,
+        url: '/api/products/' + product._id,
         auth: cloneObject(defaultAuthObject)
       };
       done();
@@ -308,19 +308,19 @@ describe('Test Product Routes', async () => {
     });
 
     it('should fail when id is not a hex string', async () => {
-      request.url = '/products/aaaaaaaaaaaaaaaaaaaaaaaz';
+      request.url = '/api/products/aaaaaaaaaaaaaaaaaaaaaaaz';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when id is not present', async () => {
-      request.url = '/products/';
+      request.url = '/api/products/';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
 
     it('should return 404 when product does not exist', async () => {
-      request.url = '/products/aaaaaaaaaaaaaaaaaaaaaaa1';
+      request.url = '/api/products/aaaaaaaaaaaaaaaaaaaaaaa1';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
@@ -376,7 +376,7 @@ describe('Test Product Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'GET',
-        url: '/products',
+        url: '/api/products',
         auth: cloneObject(defaultAuthObject)
       };
       done();
@@ -441,7 +441,7 @@ describe('Test Product Routes', async () => {
       product = await insertDummyProduct(getModel(server.plugins, 'Product'));
       request = {
         method: 'PATCH',
-        url: '/products/' + product._id,
+        url: '/api/products/' + product._id,
         payload: {
           name: 'patched name'
         },
@@ -644,7 +644,7 @@ describe('Test Product Routes', async () => {
       product = await insertDummyProduct(getModel(server.plugins, 'Product'));
       request = {
         method: 'DELETE',
-        url: '/products/' + product._id,
+        url: '/api/products/' + product._id,
         auth: cloneObject({ ...defaultAuthObject })
       };
     });
@@ -670,7 +670,7 @@ describe('Test Product Routes', async () => {
     });
 
     it('should fail with error 404 when product does not exist', async () => {
-      request.url = '/products/abababababababababababab';
+      request.url = '/api/products/abababababababababababab';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
@@ -693,7 +693,7 @@ describe('Test Product Routes', async () => {
       product = await insertDummyProduct(getModel(server.plugins, 'Product'));
       request = {
         method: 'PUT',
-        url: `/products/${product._id}/categories`,
+        url: `/api/products/${product._id}/categories`,
         auth: cloneObject({ ...defaultAuthObject })
       };
     });
@@ -785,7 +785,7 @@ describe('Test Product Routes', async () => {
       credentials: { user: { id: 'asd123' }, scope: ['put:product/tags'] }
     };
 
-    before(async () => {
+    before(() => {
       productModel = getModel(server.plugins, 'Product');
     });
     after(async () => {
@@ -797,7 +797,7 @@ describe('Test Product Routes', async () => {
       product = await insertDummyProduct(productModel);
       request = {
         method: 'PUT',
-        url: `/products/${product._id}/tags`,
+        url: `/api/products/${product._id}/tags`,
         auth: cloneObject({ ...defaultAuthObject })
       };
     });

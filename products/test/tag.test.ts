@@ -20,7 +20,7 @@ const cleanUp = async function cleanUp(server: Server) {
   await tagModel.deleteMany();
 };
 
-describe('Test Tag Routes', async () => {
+describe('Test Tag Routes', () => {
   let server: Server;
   let mongod: MongoMemoryServer;
 
@@ -49,7 +49,7 @@ describe('Test Tag Routes', async () => {
       await cleanUp(server);
       request = {
         method: 'POST',
-        url: '/tags',
+        url: '/api/products/tags',
         payload: { value: 'new tag' },
         auth: cloneObject(defaultAuthObject)
       };
@@ -121,7 +121,7 @@ describe('Test Tag Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'GET',
-        url: '/tags',
+        url: '/api/products/tags',
         auth: cloneObject(defaultAuthObject)
       };
       done();
@@ -176,7 +176,7 @@ describe('Test Tag Routes', async () => {
       tag = await insertDummyTag(getModel(server.plugins, 'Tag'));
       request = {
         method: 'DELETE',
-        url: '/tags/' + tag._id,
+        url: '/api/products/tags/' + tag._id,
         auth: cloneObject({ ...defaultAuthObject })
       };
     });
@@ -202,7 +202,7 @@ describe('Test Tag Routes', async () => {
     });
 
     it('should fail with error 404 when tag does not exist / no rows affected by update query', async () => {
-      request.url = '/tags/abababababababababababab';
+      request.url = '/api/products/tags/abababababababababababab';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });

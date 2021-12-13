@@ -20,7 +20,7 @@ const cleanUp = async function cleanUp(server: Server) {
   await categoryModel.deleteMany();
 };
 
-describe('Test Category Routes', async () => {
+describe('Test Category Routes', () => {
   let server: Server;
   let mongod: MongoMemoryServer;
 
@@ -49,7 +49,7 @@ describe('Test Category Routes', async () => {
       await cleanUp(server);
       request = {
         method: 'POST',
-        url: '/categories',
+        url: '/api/products/categories',
         payload: {
           name: 'New Category',
           description: 'a description'
@@ -135,7 +135,7 @@ describe('Test Category Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'GET',
-        url: '/categories/' + category._id,
+        url: '/api/products/categories/' + category._id,
         auth: cloneObject(defaultAuthObject)
       };
       done();
@@ -148,19 +148,19 @@ describe('Test Category Routes', async () => {
     });
 
     it('should fail when id is not a hex string', async () => {
-      request.url = '/categories/aaaaaaaaaaaaaaaaaaaaaaaz';
+      request.url = '/api/products/categories/aaaaaaaaaaaaaaaaaaaaaaaz';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     it('should fail when id is not present', async () => {
-      request.url = '/categories/';
+      request.url = '/api/products/categories/';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
 
     it('should return 404 when category does not exist', async () => {
-      request.url = '/categories/aaaaaaaaaaaaaaaaaaaaaaa1';
+      request.url = '/api/products/categories/aaaaaaaaaaaaaaaaaaaaaaa1';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
@@ -212,7 +212,7 @@ describe('Test Category Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'GET',
-        url: '/categories',
+        url: '/api/products/categories',
         auth: cloneObject(defaultAuthObject)
       };
       done();
@@ -273,7 +273,7 @@ describe('Test Category Routes', async () => {
     beforeEach((done: Done) => {
       request = {
         method: 'PATCH',
-        url: '/categories/' + category._id,
+        url: '/api/products/categories/' + category._id,
         payload: {
           name: 'patched name',
           description: 'patched description'
@@ -337,7 +337,7 @@ describe('Test Category Routes', async () => {
     });
 
     it('should fail with error 404 when category does not exist / no rows affected by update query', async () => {
-      request.url = '/categories/abababababababababababab';
+      request.url = '/api/products/categories/abababababababababababab';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
@@ -351,7 +351,6 @@ describe('Test Category Routes', async () => {
       credentials: { user: { id: 'asd123' }, scope: ['delete:category'] }
     };
 
-
     after(async () => {
       await cleanUp(server);
     });
@@ -363,7 +362,7 @@ describe('Test Category Routes', async () => {
       );
       request = {
         method: 'DELETE',
-        url: '/categories/' + category._id,
+        url: '/api/products/categories/' + category._id,
         auth: cloneObject({ ...defaultAuthObject })
       };
     });
@@ -389,7 +388,7 @@ describe('Test Category Routes', async () => {
     });
 
     it('should fail with error 404 when category does not exist / no rows affected by update query', async () => {
-      request.url = '/categories/abababababababababababab';
+      request.url = '/api/products/categories/abababababababababababab';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(404);
     });
