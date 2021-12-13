@@ -38,7 +38,12 @@
         "prev": "*",
         "next": "return"
       },
-      { "blankLine": "always", "prev": "*", "next": "function" }
+      { "blankLine": "always", "prev": "*", "next": "function" },
+      {
+        "blankLine": "always",
+        "prev": "block-like",
+        "next": ["var", "let", "const"]
+      }
     ],
     "no-confusing-arrow": "error",
     "no-param-reassign": "error",
