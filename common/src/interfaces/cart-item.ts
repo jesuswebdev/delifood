@@ -10,6 +10,7 @@ export interface CartItemDocument extends Document, CartItemAttributes {}
 
 export interface LeanCartItemDocument extends LeanDocument<CartItemAttributes> {
   _id: string;
+  __v: number;
 }
 
 // eslint-disable-next-line

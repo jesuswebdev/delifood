@@ -11,6 +11,7 @@ export interface PermissionDocument extends Document, PermissionAttributes {}
 export interface LeanPermissionDocument
   extends LeanDocument<PermissionAttributes> {
   _id: string;
+  __v: number;
 }
 
 // eslint-disable-next-line

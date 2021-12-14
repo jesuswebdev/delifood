@@ -12,6 +12,7 @@ export interface UserDocument extends Document, UserAttributes {}
 
 export interface LeanUserDocument extends LeanDocument<UserAttributes> {
   _id: string;
+  __v: number;
 }
 
 // eslint-disable-next-line

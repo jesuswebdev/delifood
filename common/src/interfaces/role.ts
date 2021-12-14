@@ -11,6 +11,7 @@ export interface RoleDocument extends Document, RoleAttributes {}
 
 export interface LeanRoleDocument extends LeanDocument<RoleAttributes> {
   _id: string;
+  __v: number;
 }
 
 // eslint-disable-next-line

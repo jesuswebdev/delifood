@@ -9,6 +9,7 @@ export interface CategoryDocument extends Document, CategoryAttributes {}
 
 export interface LeanCategoryDocument extends LeanDocument<CategoryAttributes> {
   _id: string;
+  __v: number;
 }
 
 // eslint-disable-next-line

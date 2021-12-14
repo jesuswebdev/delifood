@@ -19,6 +19,7 @@ export interface ProductDocument extends Document, ProductAttributes {}
 
 export interface LeanProductDocument extends LeanDocument<ProductAttributes> {
   _id: string;
+  __v: number;
 }
 
 // eslint-disable-next-line

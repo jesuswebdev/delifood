@@ -8,6 +8,7 @@ export interface TagDocument extends Document, TagAttributes {}
 
 export interface LeanTagDocument extends LeanDocument<TagAttributes> {
   _id: string;
+  __v: number;
 }
 
 // eslint-disable-next-line
