@@ -31,7 +31,7 @@ const tokenAuthStrategy = {
             );
 
             if (Date.now() > payload.expiresAt) {
-              return h.unauthenticated(new Error('Token expired'));
+              return h.unauthenticated(Error('Token expired'));
             }
 
             return h.authenticated({
