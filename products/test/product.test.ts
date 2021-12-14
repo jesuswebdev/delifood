@@ -625,6 +625,14 @@ describe('Test Product Routes', () => {
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
+
+    it('should increase document version', async () => {
+      request.payload.price = 2400;
+      const response = await server.inject(request);
+      const result = response.result as ProductDocument;
+      expect(response.statusCode).to.equal(200);
+      expect(result.__v).to.eq(1);
+    });
   });
 
   describe('Delete Product', () => {
@@ -774,6 +782,14 @@ describe('Test Product Routes', () => {
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(403);
     });
+
+    it('should increase document version', async () => {
+      request.payload = [];
+      const response = await server.inject(request);
+      const result = response.result as ProductDocument;
+      expect(response.statusCode).to.equal(200);
+      expect(result.__v).to.eq(1);
+    });
   });
 
   describe('Update Product Tags', () => {
@@ -873,6 +889,14 @@ describe('Test Product Routes', () => {
       request.auth.credentials.scope = ['save:role'];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(403);
+    });
+
+    it('should increase document version', async () => {
+      request.payload = [];
+      const response = await server.inject(request);
+      const result = response.result as ProductDocument;
+      expect(response.statusCode).to.equal(200);
+      expect(result.__v).to.eq(1);
     });
   });
 });

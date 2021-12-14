@@ -156,7 +156,7 @@ export async function patchProduct(
 
     const result = await productModel.findByIdAndUpdate(
       castToObjectId(id),
-      { $set: payload },
+      { $set: payload, $inc: { __v: 1 } },
       { new: true }
     );
 
@@ -227,6 +227,7 @@ export async function putProductTags(
       }
 
       product.tags = tags;
+      product.increment();
       await product.save();
     } else {
       return Boom.notFound();
@@ -271,6 +272,7 @@ export async function putProductCategories(
         return Boom.badData('One of the categories does not exist.');
       }
 
+      product.increment();
       product.categories = categories;
       await product.save();
     } else {
