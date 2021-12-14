@@ -1,41 +1,18 @@
-import { connect, NatsConnection } from 'nats';
 import { Server } from '@hapi/hapi';
 import { Model } from 'mongoose';
 import {
-  decodeNATSMessage,
-  UserAttributes,
   QUEUE_CHANNELS,
   getModel,
   UserModel,
   ProductModel,
-  ProductAttributes
+  MessageBroker,
+  LeanUserDocument,
+  LeanProductDocument
 } from '@delifood/common';
 
 interface PluginRegisterOptions {
   uri: string;
 }
-
-interface ConsumerOptions {
-  server: Server;
-  connection: NatsConnection;
-  channel: QUEUE_CHANNELS;
-  model: string;
-}
-
-const startConsumer = async function startConsumer<T, P>({
-  server,
-  connection,
-  channel,
-  model: modelType
-}: ConsumerOptions) {
-  const sub = connection.subscribe(channel);
-  const model: Model<T> = getModel(server.plugins, modelType);
-
-  for await (const msg of sub) {
-    const decoded = decodeNATSMessage<P>(msg.data);
-    await model.create(decoded);
-  }
-};
 
 const natsPlugin = {
   name: 'nats',
@@ -48,25 +25,28 @@ const natsPlugin = {
       return;
     }
 
-    const connection = await connect({ servers: [options.uri] });
-
-    startConsumer<UserModel, UserAttributes>({
-      server,
-      connection,
-      channel: QUEUE_CHANNELS.USER_CREATED,
-      model: 'User'
+    const userBroker = new MessageBroker<LeanUserDocument>({
+      uri: options.uri,
+      channel: QUEUE_CHANNELS.USER_CREATED
     });
 
-    startConsumer<ProductModel, ProductAttributes>({
-      server,
-      connection,
-      channel: QUEUE_CHANNELS.PRODUCT_CREATED,
-      model: 'Product'
+    const productBroker = new MessageBroker<LeanProductDocument>({
+      uri: options.uri,
+      channel: QUEUE_CHANNELS.PRODUCT_CREATED
     });
 
-    if (process.env.NODE_ENV !== 'test') {
-      console.log('Connection to NATS server established');
-    }
+    userBroker.onMessage = async msg => {
+      const model: Model<UserModel> = getModel(server.plugins, 'User');
+      await model.create(msg);
+    };
+
+    productBroker.onMessage = async msg => {
+      const model: Model<ProductModel> = getModel(server.plugins, 'Product');
+      await model.create(msg);
+    };
+
+    await userBroker.init().then(broker => broker.listen());
+    await productBroker.init().then(broker => broker.listen());
   }
 };
 
