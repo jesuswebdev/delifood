@@ -17,7 +17,6 @@
   "author": "jesuswebdev",
   "license": "ISC",
   "devDependencies": {
-    "@types/amqplib": "^0.8.2",
     "@types/chai": "^4.2.22",
     "@types/hapi__hapi": "^20.0.9",
     "@types/mocha": "^9.0.0",
@@ -34,7 +33,6 @@
   "dependencies": {
     "@delifood/common": "^1.0.23",
     "@hapi/hapi": "^20.2.1",
-    "amqplib": "^0.8.0",
     "dotenv": "^10.0.0",
     "joi": "^17.5.0",
     "mongoose": "^6.0.14"

@@ -15,8 +15,7 @@ import {
   ProductAttributes,
   ProductModel,
   CategoryModel,
-  assertNonDuplicateIds,
-  QUEUE_CHANNELS
+  assertNonDuplicateIds
 } from '@delifood/common';
 
 export async function createProduct(
@@ -76,7 +75,7 @@ export async function createProduct(
 
     const saved = await productModel.create(payload);
 
-    publish(QUEUE_CHANNELS.PRODUCT_CREATED, saved);
+    publish(saved);
 
     return h.response(saved).code(201);
   } catch (error: unknown) {
@@ -226,7 +225,7 @@ export async function putProductTags(
         return Boom.badData('One of the tags does not exist.');
       }
 
-      product.tags = tags;
+      product.tags = tags.map(t => t._id);
       product.increment();
       await product.save();
     } else {
@@ -273,7 +272,7 @@ export async function putProductCategories(
       }
 
       product.increment();
-      product.categories = categories;
+      product.categories = categories.map(c => c._id);
       await product.save();
     } else {
       return Boom.notFound();

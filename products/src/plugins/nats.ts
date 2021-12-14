@@ -1,6 +1,5 @@
-import { connect } from 'nats';
 import { Server } from '@hapi/hapi';
-import { encodeNATSMessage, QUEUE_CHANNELS } from '@delifood/common';
+import { QUEUE_CHANNELS, MessageBroker } from '@delifood/common';
 
 interface PluginRegisterOptions {
   uri: string;
@@ -17,14 +16,13 @@ const natsPlugin = {
       return;
     }
 
-    const connection = await connect({ servers: [options.uri] });
+    const broker = new MessageBroker({
+      uri: options.uri,
+      channel: QUEUE_CHANNELS.PRODUCT_CREATED
+    });
 
-    const publish = function publish<T>(channel: QUEUE_CHANNELS, data: T) {
-      connection.publish(channel, encodeNATSMessage(data));
-    };
-
-    server.expose('publish', publish);
-    console.log('Connection to NATS server established');
+    await broker.init();
+    server.expose('publish', broker.publish.bind(broker));
   }
 };
 
