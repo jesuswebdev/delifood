@@ -15,7 +15,7 @@ class MessageBroker<T> {
   uri: string;
   channel: string;
   queue: string | undefined;
-  onmessage: OnMessageHandler<T> | undefined;
+  onMessage: OnMessageHandler<T> | undefined;
 
   constructor(options: ConstructorOptions) {
     this.uri = options.uri;
@@ -26,7 +26,8 @@ class MessageBroker<T> {
   async init() {
     try {
       this.connection = await connect({ servers: [this.uri] });
-      console.log('NATS connection stablished');
+      console.log('Connection to NATS server established');
+      return this;
     } catch (error) {
       throw new Error('Could not connect to NATS server');
     }
@@ -56,7 +57,7 @@ class MessageBroker<T> {
       throw new Error('NATS connection is not defined');
     }
 
-    if (!this.onmessage) {
+    if (!this.onMessage) {
       throw new Error('OnMessage handler is not defined');
     }
 
@@ -66,7 +67,7 @@ class MessageBroker<T> {
 
     for await (const msg of sub) {
       const decoded = this.decodeMessage(msg.data);
-      this.onmessage(decoded);
+      this.onMessage(decoded);
     }
   }
 }
