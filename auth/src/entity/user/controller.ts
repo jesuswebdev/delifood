@@ -14,7 +14,6 @@ import {
   castToObjectId,
   UserAttributes,
   UserModel,
-  QUEUE_CHANNELS,
   LeanUserDocument
 } from '@delifood/common';
 
@@ -43,7 +42,7 @@ export async function createUser(
     const saved = await userModel.create(payload);
     const sanitized = saved.toJSON();
     sanitized.password = undefined;
-    publish(QUEUE_CHANNELS.USER_CREATED, saved);
+    publish(saved);
 
     return h.response(sanitized).code(201);
   } catch (error: unknown) {

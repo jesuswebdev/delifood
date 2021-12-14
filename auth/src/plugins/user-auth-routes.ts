@@ -7,7 +7,6 @@ import {
   LeanRoleDocument,
   LeanPermissionDocument,
   LeanUserDocument,
-  QUEUE_CHANNELS,
   MongoError
 } from '@delifood/common';
 import Boom from '@hapi/boom';
@@ -74,7 +73,7 @@ const authRoutesPlugin = {
             roles: [userRole._id]
           });
 
-          publish(QUEUE_CHANNELS.USER_CREATED, user);
+          publish(user);
 
           return h.response().code(201);
         } catch (error: unknown) {
