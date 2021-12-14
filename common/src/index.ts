@@ -57,3 +57,4 @@ export * from './interfaces/index';
 export * from './schemas/index';
 export * from './hapi/index';
 export * from './test-helpers';
+export * from './MessageBroker';
