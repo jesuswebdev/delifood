@@ -18,7 +18,7 @@ const ROUTES_VALIDATION = {
 const tagRoutes = {
   name: 'tag routes',
   version: '1.0.0',
-  async register(server: Server) {
+  register(server: Server) {
     server.route({
       method: 'POST',
       path: '/',

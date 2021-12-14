@@ -22,7 +22,7 @@ const ROUTES_VALIDATION = {
 const productRoutes = {
   name: 'product routes',
   version: '1.0.0',
-  register: async function (server: Server) {
+  register(server: Server) {
     server.route({
       method: 'POST',
       path: '/',

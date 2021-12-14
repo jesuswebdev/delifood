@@ -34,6 +34,7 @@ export async function createProduct(
     for (const strings of [payload.images, payload.categories, payload.tags]) {
       if (strings?.length) {
         const duplicate = !assertNonDuplicateIds(strings as string[]);
+
         if (duplicate) {
           return Boom.badData('Array contains duplicate values.');
         }
@@ -82,6 +83,7 @@ export async function createProduct(
     if ((error as MongoError)?.code === 11000) {
       return Boom.conflict();
     }
+
     return Boom.internal();
   }
 }
@@ -108,6 +110,7 @@ export async function getProduct(
     return h.response(product);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -122,9 +125,11 @@ export async function listProducts(
       'Product'
     );
     const products = await productModel.find();
+
     return h.response(products);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -143,6 +148,7 @@ export async function patchProduct(
 
     if ((payload.images ?? []).length) {
       const duplicateImages = !assertNonDuplicateIds(payload.images ?? []);
+
       if (duplicateImages) {
         return Boom.badData('Duplicate values in the images array');
       }
@@ -163,6 +169,7 @@ export async function patchProduct(
     if ((error as MongoError)?.code === 11000) {
       return Boom.conflict();
     }
+
     return Boom.internal();
   }
 }
@@ -186,6 +193,7 @@ export async function deleteProduct(
     return h.response().code(204);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -223,9 +231,11 @@ export async function putProductTags(
     } else {
       return Boom.notFound();
     }
+
     return h.response(product);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -266,9 +276,11 @@ export async function putProductCategories(
     } else {
       return Boom.notFound();
     }
+
     return h.response(product);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }

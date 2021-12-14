@@ -25,13 +25,14 @@ export async function createCategory(
       request.server.plugins,
       'Category'
     );
-
     const saved = await categoryModel.create(payload);
+
     return h.response(saved).code(201);
   } catch (error: unknown) {
     if ((error as MongoError)?.code === 11000) {
       return Boom.conflict();
     }
+
     return Boom.internal();
   }
 }
@@ -55,6 +56,7 @@ export async function getCategory(
     return h.response(category);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -69,9 +71,11 @@ export async function listCategories(
       'Category'
     );
     const categories = await categoryModel.find();
+
     return h.response(categories);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }
@@ -87,7 +91,6 @@ export async function patchCategory(
       request.server.plugins,
       'Category'
     );
-
     const result = await categoryModel.findByIdAndUpdate(castToObjectId(id), {
       $set: payload
     });
@@ -101,6 +104,7 @@ export async function patchCategory(
     if ((error as MongoError)?.code === 11000) {
       return Boom.conflict();
     }
+
     return Boom.internal();
   }
 }
@@ -124,6 +128,7 @@ export async function deleteCategory(
     return h.response().code(204);
   } catch (error) {
     console.error(error);
+
     return Boom.internal();
   }
 }

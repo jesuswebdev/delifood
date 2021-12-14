@@ -17,6 +17,7 @@ const mongoosePlugin = {
     createCategoryModel(connection);
     createProductModel(connection);
     server.expose('connection', connection);
+
     if (process.env.NODE_ENV !== 'test') {
       console.log('MongoDB database started');
     }
