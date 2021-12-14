@@ -147,13 +147,13 @@ export async function putRolePermissions(
       request.server.plugins,
       'Permission'
     );
-    const RoleModel = getModel<RoleModel>(request.server.plugins, 'Role');
+    const roleModel = getModel<RoleModel>(request.server.plugins, 'Role');
 
     if (!assertPermissionIds(permissionsIds)) {
       return Boom.badData('The array contains duplicate permissions.');
     }
 
-    const role = await RoleModel.findById(castToObjectId(roleId));
+    const role = await roleModel.findById(castToObjectId(roleId));
 
     if (role) {
       const permissions = await permissionModel.find({
@@ -164,7 +164,7 @@ export async function putRolePermissions(
         return Boom.badData('One of the permissions does not exist.');
       }
 
-      role.permissions = permissions;
+      role.permissions = permissions.map(p => p._id);
       await role.save();
     } else {
       return Boom.notFound();
