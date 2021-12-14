@@ -5,12 +5,13 @@
   "main": "./lib/index.js",
   "scripts": {
     "mongo:seed": "ts-node ./src/utils/seed.ts",
-    "docker:push":"docker push jesuswebdev/delifood-auth",
+    "docker:push": "docker push jesuswebdev/delifood-auth",
     "docker:run": "docker run --name delifood-auth -d --env-file=./.env jesuswebdev/delifood-auth",
     "docker:build": "tsc && docker build -t jesuswebdev/delifood-auth .",
     "build": "tsc",
     "start": "node ./lib/index.js",
     "dev": "ts-node ./src/index.ts",
+    "lint": "./node_modules/eslint/bin/eslint.js .",
     "test": "MONGOMS_DOWNLOAD_URL=https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.4.1.tgz NODE_ENV=test mocha -r ts-node/register test/**/*.test.ts"
   },
   "keywords": [],
