@@ -32,6 +32,7 @@ export const insertDummyPermission = async function insertDummyPermission(
     description: 'Dummy Permission description',
     ...props
   });
+
   return doc;
 };
 
@@ -44,6 +45,7 @@ export const insertDummyRole = async function insertDummyRole(
     description: 'Dummy role description',
     ...props
   });
+
   return doc;
 };
 
@@ -56,6 +58,7 @@ export const insertDummyUser = async function insertDummyUser(
     password: 'password1234',
     ...props
   });
+
   return doc;
 };
 
@@ -68,6 +71,7 @@ export const insertDummyCategory = async function insertDummyCategory(
     description: 'Dummy category description',
     ...props
   });
+
   return doc;
 };
 
@@ -79,6 +83,7 @@ export const insertDummyTag = async function insertDummyTag(
     value: 'Dummy tag',
     ...props
   });
+
   return doc;
 };
 
@@ -94,6 +99,7 @@ export const insertDummyProduct = async function insertDummyProduct(
     images: ['http://cats.com'],
     ...props
   });
+
   return doc;
 };
 
@@ -102,5 +108,6 @@ export const insertDummyCart = async function insertDummyCart(
   props?: Partial<CartAttributes>
 ): Promise<CartDocument> {
   const doc = await model.create(props);
+
   return doc;
 };

@@ -15,6 +15,7 @@ export const castToObjectId = function castToObjectId(
   if (typeof value === 'string') {
     return new Types.ObjectId(value);
   }
+
   return value;
 };
 
@@ -33,23 +34,28 @@ export const assertNonDuplicateIds = function assertNonDuplicateIds(
   ids: string[]
 ): boolean {
   const aux: { [key: string]: number } = {};
+
   for (const id of ids) {
     if (aux[id]) {
       return false;
     }
     aux[id] = 1;
   }
+
   return true;
 };
 
 export const encodeNATSMessage = function encodeNATSMessage<T>(data: T) {
   const sc = StringCodec();
+
   return sc.encode(JSON.stringify(data));
 };
+
 export const decodeNATSMessage = function decodeNATSMessage<T>(
   msg: Uint8Array
 ): T {
   const sc = StringCodec();
+
   return JSON.parse(sc.decode(msg));
 };
 
@@ -57,4 +63,5 @@ export * from './interfaces/index';
 export * from './schemas/index';
 export * from './hapi/index';
 export * from './test-helpers';
+export * from './constants';
 export * from './MessageBroker';

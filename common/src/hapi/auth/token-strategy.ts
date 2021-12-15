@@ -11,7 +11,7 @@ interface AuthStrategyOptions {
 
 const tokenAuthStrategy = {
   name: 'tokenAuthScheme',
-  register: async function (server: Server, options: AuthStrategyOptions) {
+  register(server: Server, options: AuthStrategyOptions) {
     const requestScheme = () => {
       return {
         authenticate: async (request: Request, h: ResponseToolkit) => {
@@ -42,6 +42,7 @@ const tokenAuthStrategy = {
             });
           } catch (error) {
             console.error(error);
+
             return Boom.unauthorized();
           }
         }

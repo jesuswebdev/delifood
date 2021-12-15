@@ -27,6 +27,7 @@ class MessageBroker<T> {
     try {
       this.connection = await connect({ servers: [this.uri] });
       console.log('Connection to NATS server established');
+
       return this;
     } catch (error) {
       throw new Error('Could not connect to NATS server');
