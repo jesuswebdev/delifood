@@ -1,6 +1,7 @@
 'use strict';
 import { Server } from '@hapi/hapi';
 import Joi from 'joi';
+import { Types } from 'mongoose';
 import * as controller from './controller';
 
 const ROUTES_VALIDATION = {
@@ -15,7 +16,18 @@ const ROUTES_VALIDATION = {
     categories: Joi.array().items(Joi.string().hex().length(24)),
     tags: Joi.array().items(Joi.string().hex().length(24))
   },
-  params: { id: Joi.string().hex().length(24).exist() },
+  params: {
+    id: Joi.string()
+      .trim()
+      .custom((value: string, helpers: Joi.CustomHelpers<string>) => {
+        if (!Types.ObjectId.isValid(value)) {
+          return helpers.error('any.invalid');
+        }
+
+        return value;
+      })
+      .exist()
+  },
   query: {}
 };
 

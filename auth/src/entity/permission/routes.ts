@@ -2,6 +2,7 @@
 import { Server } from '@hapi/hapi';
 import Joi from 'joi';
 import * as controller from './controller';
+import { Types } from 'mongoose';
 
 const PERMISSION_TYPES: string[] = [
   'create',
@@ -21,7 +22,18 @@ const ROUTES_VALIDATION = {
       .regex(new RegExp(`^(${PERMISSION_TYPES.join('|')})\:[a-z\/]+`)),
     description: Joi.string().trim().min(4)
   },
-  params: { id: Joi.string().trim().length(24).hex().required() },
+  params: {
+    id: Joi.string()
+      .trim()
+      .custom((value: string, helpers: Joi.CustomHelpers<string>) => {
+        if (!Types.ObjectId.isValid(value)) {
+          return helpers.error('any.invalid');
+        }
+
+        return value;
+      })
+      .required()
+  },
   query: {}
 };
 
