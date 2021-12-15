@@ -7,9 +7,6 @@ export * from './tag';
 export * from './cart';
 export * from './cart-item';
 
-export * from './auth-strategy';
-export * from './queue-channels';
-
 export interface UserCredentials {
   id: string;
   permissions?: string[];
