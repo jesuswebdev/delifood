@@ -11,7 +11,7 @@
     "start": "node ./lib/index.js",
     "dev": "ts-node ./src/index.ts",
     "lint": "./node_modules/eslint/bin/eslint.js .",
-    "test": "MONGOMS_DOWNLOAD_URL=https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.4.1.tgz NODE_ENV=test mocha -r ts-node/register test/**/*.test.ts"
+    "test": "MONGOMS_DOWNLOAD_URL=https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.4.1.tgz NODE_ENV=test mocha --exit -r ts-node/register test/**/*.test.ts"
   },
   "keywords": [],
   "author": "jesuswebdev",
