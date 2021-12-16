@@ -1,76 +1,95 @@
-import { connect, NatsConnection, JSONCodec } from 'nats';
+import amqplib, { ConsumeMessage } from 'amqplib';
+
+interface MessageBrokerConstructorOptions {
+  uri: string;
+  exchange: string;
+  queue?: string;
+}
 
 interface OnMessageHandler<T> {
   (msg: T): void;
 }
 
-interface ConstructorOptions {
+export class MessageBroker<T> {
   uri: string;
-  channel: string;
-  queue?: string;
-}
-
-class MessageBroker<T> {
-  connection: NatsConnection | undefined;
-  uri: string;
-  channel: string;
+  exchange: string;
   queue: string | undefined;
+  connection: amqplib.Connection | undefined;
+  boundChannel: amqplib.Channel | undefined;
   onMessage: OnMessageHandler<T> | undefined;
 
-  constructor(options: ConstructorOptions) {
+  constructor(options: MessageBrokerConstructorOptions) {
     this.uri = options.uri;
-    this.channel = options.channel;
+    this.exchange = options.exchange;
     this.queue = options.queue;
   }
 
-  async init() {
-    try {
-      this.connection = await connect({ servers: [this.uri] });
-      console.log('Connection to NATS server established');
-
-      return this;
-    } catch (error) {
-      throw new Error('Could not connect to NATS server');
+  async initializeConnection() {
+    if (!this.uri) {
+      throw new Error('Message Broker URI is not defined');
     }
-  }
 
-  private encodeMessage(data: T) {
-    const jc = JSONCodec<T>();
-
-    return jc.encode(data);
-  }
-
-  private decodeMessage(msg: Uint8Array): T {
-    const jc = JSONCodec<T>();
-
-    return jc.decode(msg);
-  }
-
-  publish(data: T) {
-    if (!this.connection) {
-      throw new Error('NATS connection is not defined');
+    if (!this.exchange) {
+      throw new Error('Message Broker Exchange is not defined');
     }
-    this.connection.publish(this.channel, this.encodeMessage(data));
+
+    this.connection = await amqplib.connect(this.uri);
+    this.boundChannel = await this.connection.createChannel();
+    await this.boundChannel.assertExchange(this.exchange, 'topic', {
+      durable: true
+    });
   }
 
-  async listen() {
-    if (!this.connection) {
-      throw new Error('NATS connection is not defined');
+  async close() {
+    await this.connection?.close();
+  }
+
+  encodeMessage(data: T): Buffer {
+    return Buffer.from(JSON.stringify(data));
+  }
+
+  decodeMessage(msg: ConsumeMessage): T {
+    return JSON.parse(msg.content.toString());
+  }
+
+  publish(topic: string, message: T) {
+    if (!this.boundChannel) {
+      throw new Error('No channel bound to publish message');
+    }
+    this.boundChannel.publish(
+      this.exchange,
+      topic,
+      this.encodeMessage(message),
+      { timestamp: Date.now(), persistent: true }
+    );
+  }
+
+  async listen(topic: string) {
+    if (!this.boundChannel) {
+      throw new Error('No channel bound to listen to messages');
     }
 
     if (!this.onMessage) {
-      throw new Error('OnMessage handler is not defined');
+      throw new Error('onMessage handler is not defined');
     }
 
-    const sub = this.connection.subscribe(this.channel, {
-      ...(this.queue && { queue: this.queue })
+    const q = await this.boundChannel.assertQueue(
+      this.queue ?? `${topic}_queue`
+    );
+
+    await this.boundChannel.bindQueue(q.queue, this.exchange, topic);
+
+    this.boundChannel.consume(q.queue, msg => {
+      if (msg !== null) {
+        try {
+          // eslint-disable-next-line
+          this.onMessage!(this.decodeMessage(msg));
+          this.boundChannel?.ack(msg);
+        } catch (error) {
+          console.error(error);
+          this.boundChannel?.nack(msg);
+        }
+      }
     });
-
-    for await (const msg of sub) {
-      const decoded = this.decodeMessage(msg.data);
-      this.onMessage(decoded);
-    }
   }
 }
-
-export { MessageBroker };
