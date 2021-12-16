@@ -1,5 +1,6 @@
 import { Schema, SchemaOptions, Types } from 'mongoose';
 import { UserAttributes } from '../interfaces/index';
+import { USER_STATUS } from '../index';
 
 const createUserSchema = function createUserSchema(
   options: SchemaOptions = {}
@@ -8,8 +9,9 @@ const createUserSchema = function createUserSchema(
     {
       email: { type: String, required: true, unique: true },
       password: { type: String, required: true, select: false },
-      enabled: { type: Boolean, default: false },
-      roles: { type: [Types.ObjectId], ref: 'Role' }
+      status: { type: String, default: USER_STATUS.ACTIVE },
+      roles: { type: [Types.ObjectId], ref: 'Role' },
+      profile: { type: Schema.Types.ObjectId, ref: 'CustomerProfile' }
     },
     { ...options }
   );

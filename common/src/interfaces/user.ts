@@ -1,11 +1,13 @@
 import { Document, LeanDocument, Model, Types } from 'mongoose';
-import { LeanRoleDocument } from './index';
+import { LeanRoleDocument, LeanCustomerProfileDocument } from './index';
+import { USER_STATUS } from '../index';
 
 export interface UserAttributes {
   email: string;
   password?: string;
-  enabled: boolean;
+  status: USER_STATUS;
   roles: Types.ObjectId[] | LeanRoleDocument[] | string[];
+  profile: Types.ObjectId | LeanCustomerProfileDocument | string;
 }
 
 export interface UserDocument extends Document, UserAttributes {}
