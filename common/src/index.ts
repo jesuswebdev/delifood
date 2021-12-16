@@ -1,7 +1,5 @@
 import { Types } from 'mongoose';
 import { PluginProperties } from '@hapi/hapi';
-import { StringCodec } from 'nats';
-
 declare module '@hapi/hapi' {
   export interface PluginProperties {
     // eslint-disable-next-line
@@ -43,20 +41,6 @@ export const assertNonDuplicateIds = function assertNonDuplicateIds(
   }
 
   return true;
-};
-
-export const encodeNATSMessage = function encodeNATSMessage<T>(data: T) {
-  const sc = StringCodec();
-
-  return sc.encode(JSON.stringify(data));
-};
-
-export const decodeNATSMessage = function decodeNATSMessage<T>(
-  msg: Uint8Array
-): T {
-  const sc = StringCodec();
-
-  return JSON.parse(sc.decode(msg));
 };
 
 export * from './interfaces/index';
