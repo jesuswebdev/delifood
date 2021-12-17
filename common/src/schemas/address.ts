@@ -17,7 +17,7 @@ const createAddressSchema = function createAddressSchema(
       province: { type: String },
       lastName: { type: String, required: true },
       firstName: { type: String, required: true },
-      customerId: { type: Schema.Types.ObjectId, ref: 'CustomerProfile' },
+      customerId: { type: Schema.Types.ObjectId, ref: 'Customer' },
       countryCode: { type: String },
       countryName: { type: String },
       provinceCode: { type: String }

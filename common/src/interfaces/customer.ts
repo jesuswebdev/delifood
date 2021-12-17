@@ -23,4 +23,4 @@ export interface LeanCustomerDocument extends LeanDocument<CustomerAttributes> {
 }
 
 // eslint-disable-next-line
-export interface CustomerProfileModel extends Model<CustomerDocument> {}
+export interface CustomerModel extends Model<CustomerDocument> {}
