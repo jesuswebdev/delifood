@@ -3,7 +3,6 @@ export * from './role';
 export * from './user';
 export * from './category';
 export * from './product';
-export * from './tag';
 export * from './cart';
 export * from './cart-item';
 export * from './address';

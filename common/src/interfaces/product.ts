@@ -1,9 +1,11 @@
 import { Document, Model, LeanDocument, Types } from 'mongoose';
-import { LeanTagDocument, LeanCategoryDocument } from './index';
+import { LeanCategoryDocument } from './index';
+import { PRODUCT_STATUS } from '../index';
 
 export interface ProductAttributes {
-  name: string;
+  title: string;
   description?: string;
+  status: PRODUCT_STATUS;
   sku: string;
   price: number;
   enabled?: boolean;
@@ -12,7 +14,7 @@ export interface ProductAttributes {
   orders?: number;
   discount?: number;
   categories: Types.ObjectId[] | LeanCategoryDocument[] | string[];
-  tags: Types.ObjectId[] | LeanTagDocument[] | string[];
+  tags: string[];
 }
 
 export interface ProductDocument extends Document, ProductAttributes {}

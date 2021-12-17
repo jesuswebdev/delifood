@@ -6,8 +6,9 @@ const createProductSchema = function createProductSchema(
 ) {
   return new Schema<ProductAttributes>(
     {
-      name: { type: String, required: true },
+      title: { type: String, required: true },
       description: { type: String },
+      status: { type: String },
       discount: { type: Number, default: 0 },
       enabled: { type: Boolean, default: false },
       price: { type: Number },
@@ -15,7 +16,7 @@ const createProductSchema = function createProductSchema(
       rating: { type: Number },
       orders: { type: Number, default: 0 },
       sku: { type: String, unique: true },
-      tags: { type: [Types.ObjectId], ref: 'Tag' },
+      tags: { type: [String] },
       categories: { type: [Types.ObjectId], ref: 'Category' }
     },
     { ...options }
