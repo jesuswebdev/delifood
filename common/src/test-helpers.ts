@@ -11,9 +11,6 @@ import {
   CategoryModel,
   CategoryDocument,
   CategoryAttributes,
-  TagModel,
-  TagDocument,
-  TagAttributes,
   ProductModel,
   ProductDocument,
   ProductAttributes,
@@ -69,18 +66,6 @@ export const insertDummyCategory = async function insertDummyCategory(
   const doc = await model.create({
     name: 'Dummy Category',
     description: 'Dummy category description',
-    ...props
-  });
-
-  return doc;
-};
-
-export const insertDummyTag = async function insertDummyTag(
-  model: TagModel,
-  props?: Partial<TagAttributes>
-): Promise<TagDocument> {
-  const doc = await model.create({
-    value: 'Dummy tag',
     ...props
   });
 
