@@ -10,8 +10,7 @@ const createUserSchema = function createUserSchema(
       email: { type: String, required: true, unique: true },
       password: { type: String, required: true, select: false },
       status: { type: String, default: USER_STATUS.ACTIVE },
-      roles: { type: [Types.ObjectId], ref: 'Role' },
-      profile: { type: Schema.Types.ObjectId, ref: 'CustomerProfile' }
+      roles: { type: [Types.ObjectId], ref: 'Role' }
     },
     { ...options }
   );

@@ -1,13 +1,16 @@
 import { Schema, SchemaOptions, Types } from 'mongoose';
-import { CustomerProfileAttributes } from '../interfaces/index';
+import { CustomerAttributes } from '../interfaces/index';
+import { USER_STATUS } from '../index';
 
-const createCustomerProfileSchema = function createCustomerProfileSchema(
+const createCustomerSchema = function createCustomerSchema(
   options: SchemaOptions = {}
 ) {
-  return new Schema<CustomerProfileAttributes>(
+  return new Schema<CustomerAttributes>(
     {
-      userId: { type: Schema.Types.ObjectId, ref: 'User' },
-      email: { type: String, required: true },
+      email: { type: String, required: true, unique: true },
+      password: { type: String, required: true, select: false },
+      status: { type: String, default: USER_STATUS.ACTIVE },
+      roles: { type: [Types.ObjectId], ref: 'Role' },
       firstName: { type: String, required: true },
       lastName: { type: String, required: true },
       lastOrderId: { type: String },
@@ -23,4 +26,4 @@ const createCustomerProfileSchema = function createCustomerProfileSchema(
   );
 };
 
-export { createCustomerProfileSchema };
+export { createCustomerSchema };

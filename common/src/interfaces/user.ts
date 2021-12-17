@@ -1,5 +1,5 @@
 import { Document, LeanDocument, Model, Types } from 'mongoose';
-import { LeanRoleDocument, LeanCustomerProfileDocument } from './index';
+import { LeanRoleDocument } from './index';
 import { USER_STATUS } from '../index';
 
 export interface UserAttributes {
@@ -7,7 +7,6 @@ export interface UserAttributes {
   password?: string;
   status: USER_STATUS;
   roles: Types.ObjectId[] | LeanRoleDocument[] | string[];
-  profile: Types.ObjectId | LeanCustomerProfileDocument | string;
 }
 
 export interface UserDocument extends Document, UserAttributes {}

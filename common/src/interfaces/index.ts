@@ -7,7 +7,7 @@ export * from './tag';
 export * from './cart';
 export * from './cart-item';
 export * from './address';
-export * from './customer-profile';
+export * from './customer';
 
 export interface UserCredentials {
   id: string;

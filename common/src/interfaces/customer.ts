@@ -1,10 +1,8 @@
 import { Document, Model, LeanDocument, Types } from 'mongoose';
-import { LeanUserDocument } from '.';
+import { UserAttributes } from '.';
 import { LeanAddressDocument } from './address';
 
-export interface CustomerProfileAttributes {
-  userId: Types.ObjectId | LeanUserDocument | string;
-  email: string;
+export interface CustomerAttributes extends UserAttributes {
   firstName: string;
   lastName: string;
   lastOrderId: string;
@@ -17,15 +15,12 @@ export interface CustomerProfileAttributes {
   defaultAddress: Types.ObjectId | LeanAddressDocument | string;
 }
 
-export interface CustomerProfileDocument
-  extends Document,
-    CustomerProfileAttributes {}
+export interface CustomerDocument extends Document, CustomerAttributes {}
 
-export interface LeanCustomerProfileDocument
-  extends LeanDocument<CustomerProfileAttributes> {
+export interface LeanCustomerDocument extends LeanDocument<CustomerAttributes> {
   _id: string;
   __v: number;
 }
 
 // eslint-disable-next-line
-export interface CustomerProfileModel extends Model<CustomerProfileDocument> {}
+export interface CustomerProfileModel extends Model<CustomerDocument> {}

@@ -6,4 +6,4 @@ export * from './tag';
 export * from './product';
 export * from './cart';
 export * from './address';
-export * from './customer-profile';
+export * from './customer';
